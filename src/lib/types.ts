@@ -1,36 +1,40 @@
-export type Role = "founder" | "early_contributor" | "contributor";
+export type Role = "founder" | "early_contributor" | "contributor" | "writer";
 
 export interface Author {
   id: string;
-  name: string;
+  user_id: string;
+  display_name: string;
   username: string;
-  avatar?: string;
+  avatar_url?: string | null;
   role: Role;
   bio: string;
-  joinedDate: string;
-  storyCount: number;
 }
 
 export interface Story {
   id: string;
+  user_id: string;
   title: string;
-  subtitle: string;
-  content: string;
-  author: Author;
-  publishedAt: string;
+  subtitle: string | null;
+  content: string | null;
+  is_draft: boolean;
+  is_pinned: boolean;
   views: number;
-  pinned?: boolean;
-  isDraft?: boolean;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  author?: Author;
 }
 
 export const ROLE_LABELS: Record<Role, string> = {
   founder: "Founder",
   early_contributor: "Early Contributor",
   contributor: "Contributor",
+  writer: "Writer",
 };
 
-export const ROLE_EMOJI: Record<Role, string> = {
-  founder: "👑",
-  early_contributor: "🌟",
-  contributor: "✍️",
+export const ROLE_KAOMOJI: Record<Role, string> = {
+  founder: "(*´▽`*)",
+  early_contributor: "(◕‿◕)",
+  contributor: "(｡◕‿◕｡)",
+  writer: "(￣▽￣)",
 };
