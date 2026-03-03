@@ -23,18 +23,27 @@ export const usePublishedStories = () =>
     queryFn: async () => {
       const { data } = await supabase
         .from("stories")
-        .select("*, profiles!inner(id, user_id, display_name, username, avatar_url, bio)")
+        .select("*")
         .eq("is_draft", false)
         .order("published_at", { ascending: false });
 
-      if (!data) return [];
+      if (!data || data.length === 0) return [];
 
-      // Fetch roles for all authors
       const userIds = [...new Set(data.map((s: any) => s.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
       const { data: roles } = await supabase.from("user_roles").select("*").in("user_id", userIds);
+
+      const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
       const roleMap = new Map((roles || []).map((r) => [r.user_id, r.role]));
 
-      return data.map((r: any) => mapStory({ ...r, user_roles: [{ role: roleMap.get(r.user_id) || "writer" }] }));
+      return data.map((s: any) => {
+        const p = profileMap.get(s.user_id);
+        return mapStory({
+          ...s,
+          profiles: p || null,
+          user_roles: [{ role: roleMap.get(s.user_id) || "writer" }],
+        });
+      });
     },
   });
 
@@ -61,18 +70,23 @@ export const useStory = (id: string | undefined) =>
     queryFn: async () => {
       const { data } = await supabase
         .from("stories")
-        .select("*, profiles!inner(id, user_id, display_name, username, avatar_url, bio)")
+        .select("*")
         .eq("id", id!)
         .single();
       if (!data) return null;
 
-      // Get role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", data.user_id)
+        .single();
+
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.user_id);
 
-      return mapStory({ ...data, user_roles: roles || [{ role: "writer" }] });
+      return mapStory({ ...data, profiles: profile, user_roles: roles || [{ role: "writer" }] });
     },
   });
 
@@ -83,13 +97,21 @@ export const useUserStories = (userId: string | undefined) =>
     queryFn: async () => {
       const { data } = await supabase
         .from("stories")
-        .select("*, profiles!inner(id, user_id, display_name, username, avatar_url, bio)")
+        .select("*")
         .eq("user_id", userId!)
         .eq("is_draft", false)
         .order("is_pinned", { ascending: false })
         .order("published_at", { ascending: false });
 
-      return (data || []).map((r: any) => mapStory({ ...r, user_roles: [{ role: "writer" }] }));
+      if (!data || data.length === 0) return [];
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", userId!)
+        .single();
+
+      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: [{ role: "writer" }] }));
     },
   });
 
