@@ -63,20 +63,26 @@ const Admin = () => {
   };
 
   const fetchStories = async () => {
-    const { data } = await supabase
+    const { data: storiesData } = await supabase
       .from("stories")
-      .select("*, profiles!inner(display_name)")
+      .select("*")
       .order("created_at", { ascending: false });
 
+    if (!storiesData) return setStories([]);
+
+    const userIds = [...new Set(storiesData.map((s) => s.user_id))];
+    const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p.display_name]));
+
     setStories(
-      (data || []).map((s: any) => ({
+      storiesData.map((s: any) => ({
         id: s.id,
         title: s.title,
         user_id: s.user_id,
         is_draft: s.is_draft,
         published_at: s.published_at,
         views: s.views,
-        author_name: s.profiles?.display_name || "unknown",
+        author_name: profileMap.get(s.user_id) || "unknown",
       }))
     );
   };
