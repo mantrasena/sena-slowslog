@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import logo from "@/assets/logo.png";
+
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
-          <img src={logo} alt="Sena" className="mx-auto h-10 mb-4" />
+          <span className="font-serif text-2xl font-medium tracking-tight">Sena <span className="text-muted-foreground">(◕ᴗ◕✿)</span></span>
           <p className="text-sm text-muted-foreground">
             {isLogin ? "welcome back (◕‿◕)" : "join the slow blog (◕‿◕)"}
           </p>

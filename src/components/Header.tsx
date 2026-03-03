@@ -11,7 +11,7 @@ import { PenLine, Settings, FileText, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/logo.png";
+
 
 const Header = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Header = () => {
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Sena" className="h-7" />
+          <span className="font-serif text-xl font-medium tracking-tight">Sena <span className="text-muted-foreground">(◕ᴗ◕✿)</span></span>
         </Link>
 
         <div className="flex items-center gap-3">
