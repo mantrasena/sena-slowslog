@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300;1,9..40,400&display=swap');
+/* Georgia serif - system font, no import needed */
 
 @tailwind base;
 @tailwind components;
@@ -92,6 +92,6 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Instrument Serif', serif;
+    font-family: Georgia, 'Times New Roman', serif;
   }
 }
