@@ -1,4 +1,4 @@
-import { Search, User } from "lucide-react";
+import { Search, User, Bookmark, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PenLine, Settings, FileText, LogOut, Shield } from "lucide-react";
+import { PenLine, FileText, LogOut, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +54,12 @@ const Header = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/drafts")} className="gap-2 cursor-pointer">
                   <FileText className="h-4 w-4" /> Drafts
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/bookmarks")} className="gap-2 cursor-pointer">
+                  <Bookmark className="h-4 w-4" /> Bookmarks
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2 cursor-pointer">
+                  <Settings className="h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 {isFounder && (
                   <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2 cursor-pointer">
