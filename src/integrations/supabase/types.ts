@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -89,6 +118,38 @@ export type Database = {
         }
         Relationships: []
       }
+      story_views: {
+        Row: {
+          created_at: string
+          id: string
+          story_id: string
+          viewer_id: string | null
+          viewer_ip: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          story_id: string
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          story_id?: string
+          viewer_id?: string | null
+          viewer_ip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -118,6 +179,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_story_view: {
+        Args: { p_story_id: string; p_viewer_id: string }
+        Returns: undefined
       }
     }
     Enums: {

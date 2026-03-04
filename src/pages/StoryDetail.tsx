@@ -4,7 +4,9 @@ import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
 import { useStory, useDeleteStory, useTogglePin } from "@/hooks/useStories";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowLeft, Bookmark, MoreHorizontal, Eye, Minus, Plus, Sun, Moon } from "lucide-react";
+import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
+import { useRecordView } from "@/hooks/useRecordView";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -22,8 +24,14 @@ const StoryDetail = () => {
   const { user } = useAuth();
   const deleteMutation = useDeleteStory();
   const pinMutation = useTogglePin();
+  const { data: bookmarks } = useBookmarks();
+  const bookmarkMutation = useToggleBookmark();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
+
+  useRecordView(id);
+
+  const isBookmarked = bookmarks?.includes(id || "") ?? false;
 
   if (isLoading) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted-foreground">loading...</p></div>;
   if (!story) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted-foreground">story not found (╥﹏╥)</p></div>;
@@ -52,6 +60,15 @@ const StoryDetail = () => {
               <ArrowLeft className="inline h-4 w-4" /> back
             </button>
             <div className="flex items-center gap-2">
+              {user && (
+                <button
+                  onClick={() => bookmarkMutation.mutate({ storyId: story.id, bookmarked: isBookmarked })}
+                  className="h-8 w-8 rounded text-muted-foreground hover:text-foreground flex items-center justify-center"
+                  title={isBookmarked ? "Remove bookmark" : "Bookmark"}
+                >
+                  {isBookmarked ? <BookmarkCheck className="h-4 w-4 text-foreground" /> : <Bookmark className="h-4 w-4" />}
+                </button>
+              )}
               {isOwner && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -59,10 +76,16 @@ const StoryDetail = () => {
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)}>Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={handlePin}>{story.is_pinned ? "Unpin" : "Pin to profile"}</DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="text-destructive">Delete</DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
+                      <Pencil className="h-4 w-4" /> Edit article
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
+                      <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDelete} className="gap-2 cursor-pointer text-destructive">
+                      <Trash2 className="h-4 w-4" /> Delete article
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}

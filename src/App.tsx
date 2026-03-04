@@ -10,6 +10,8 @@ import StoryDetail from "./pages/StoryDetail";
 import Drafts from "./pages/Drafts";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
+import Bookmarks from "./pages/Bookmarks";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/story/:id" element={<StoryDetail />} />
             <Route path="/drafts" element={<Drafts />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
