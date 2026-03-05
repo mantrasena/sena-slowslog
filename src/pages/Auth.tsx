@@ -46,7 +46,7 @@ const Auth = () => {
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="mb-10 text-center">
-          <span className="font-serif text-2xl font-medium tracking-tight">Sena <span className="text-muted-foreground">(◕ᴗ◕✿)</span></span>
+          <span className="font-serif text-2xl font-medium tracking-tight text-primary">Sena (◕ᴗ◕✿)</span>
           <p className="text-sm text-muted-foreground">
             {isLogin ? "welcome back (◕‿◕)" : "join the slow blog (◕‿◕)"}
           </p>
