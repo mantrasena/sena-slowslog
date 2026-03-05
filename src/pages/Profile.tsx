@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,12 +6,14 @@ import StoryCard from "@/components/StoryCard";
 import RoleBadge from "@/components/RoleBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText } from "lucide-react";
+import { FileText, Settings } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/lib/types";
 
 const Profile = () => {
   const { username } = useParams();
+  const { user } = useAuth();
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", username],
@@ -47,6 +49,8 @@ const Profile = () => {
   const pinnedStories = stories?.filter((s) => s.is_pinned) || [];
   const otherStories = stories?.filter((s) => !s.is_pinned) || [];
 
+  const isOwnProfile = user && profileData && user.id === profileData.user_id;
+
   if (!profileData) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -79,6 +83,15 @@ const Profile = () => {
                 </span>
               </div>
             </div>
+            {isOwnProfile && (
+              <Link
+                to="/settings"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                title="Settings"
+              >
+                <Settings className="h-4 w-4" />
+              </Link>
+            )}
           </div>
 
           {profileData.bio && <p className="mt-5 text-sm text-muted-foreground">{profileData.bio}</p>}
