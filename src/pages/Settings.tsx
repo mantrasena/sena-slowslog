@@ -21,6 +21,9 @@ const Settings = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
 
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
