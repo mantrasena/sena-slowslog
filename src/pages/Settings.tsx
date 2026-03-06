@@ -183,7 +183,52 @@ const Settings = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Username</label>
-                  <p className="mt-1 text-sm">@{profile?.username}</p>
+                  {editingUsername ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">@</span>
+                      <input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
+                        className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
+                        placeholder="username baru"
+                      />
+                      <Button
+                        onClick={handleSaveUsername}
+                        disabled={savingUsername || !newUsername.trim() || newUsername === profile?.username}
+                        size="sm"
+                      >
+                        {savingUsername ? "saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={() => setEditingUsername(false)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm">@{profile?.username}</p>
+                      <button
+                        onClick={() => {
+                          if (canChangeUsername()) {
+                            setNewUsername(profile?.username || "");
+                            setEditingUsername(true);
+                          }
+                        }}
+                        disabled={!canChangeUsername()}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canChangeUsername() ? "Edit username" : usernameCountdown()}
+                      >
+                        <PenLine className="h-3 w-3 inline" /> edit
+                      </button>
+                      {!canChangeUsername() && (
+                        <span className="text-[10px] text-muted-foreground">{usernameCountdown()}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Email</label>
