@@ -110,6 +110,36 @@ const Settings = () => {
 
   const currentBio = bio ?? profile?.bio ?? "";
 
+  // Fetch username_changed_at
+  const { data: profileFull } = useQuery({
+    queryKey: ["profile-full", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username_changed_at")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+  });
+
+  const canChangeUsername = () => {
+    if (!profileFull?.username_changed_at) return true;
+    const lastChanged = new Date(profileFull.username_changed_at);
+    const now = new Date();
+    const diffDays = (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 30;
+  };
+
+  const usernameCountdown = () => {
+    if (!profileFull?.username_changed_at) return "";
+    const lastChanged = new Date(profileFull.username_changed_at);
+    const nextChange = new Date(lastChanged.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const daysLeft = Math.ceil((nextChange.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return `bisa diubah dalam ${daysLeft} hari`;
+  };
+
   const handleSaveBio = async () => {
     if (!user) return;
     setSaving(true);
@@ -123,6 +153,36 @@ const Settings = () => {
     } else {
       toast.success("Bio updated (◕‿◕)");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    if (!user || !newUsername.trim()) return;
+    setSavingUsername(true);
+    // Check if username is taken
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", newUsername)
+      .neq("user_id", user.id)
+      .maybeSingle();
+    if (existing) {
+      toast.error("Username sudah dipakai (╥﹏╥)");
+      setSavingUsername(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ username: newUsername, username_changed_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+    setSavingUsername(false);
+    if (error) {
+      toast.error("Failed to update username");
+    } else {
+      toast.success("Username updated (◕‿◕)");
+      setEditingUsername(false);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
     }
   };
 
