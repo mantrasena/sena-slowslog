@@ -190,7 +190,7 @@ const Admin = () => {
                       onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
                       className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
                     >
-                      {(["founder", "early_contributor", "contributor", "writer"] as Role[]).map((r) => (
+                      {(["founder", "early_adopter", "contributor", "writer"] as Role[]).map((r) => (
                         <option key={r} value={r}>{ROLE_LABELS[r]}</option>
                       ))}
                     </select>
