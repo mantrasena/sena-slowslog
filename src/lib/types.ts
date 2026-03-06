@@ -1,4 +1,4 @@
-export type Role = "founder" | "early_contributor" | "contributor" | "writer";
+export type Role = "founder" | "early_adopter" | "contributor" | "writer";
 
 export interface Author {
   id: string;
