@@ -8,7 +8,7 @@ interface RoleBadgeProps {
 
 const roleStyles: Record<Role, string> = {
   founder: "bg-accent/15 text-accent-foreground border-accent/30",
-  early_contributor: "bg-badge-early/15 text-foreground border-badge-early/30",
+  early_adopter: "bg-badge-early/15 text-foreground border-badge-early/30",
   contributor: "bg-badge-contributor/15 text-foreground border-badge-contributor/30",
   writer: "bg-muted text-muted-foreground border-border",
 };

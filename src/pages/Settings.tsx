@@ -21,6 +21,9 @@ const Settings = () => {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
 
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
@@ -107,6 +110,36 @@ const Settings = () => {
 
   const currentBio = bio ?? profile?.bio ?? "";
 
+  // Fetch username_changed_at
+  const { data: profileFull } = useQuery({
+    queryKey: ["profile-full", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("username_changed_at")
+        .eq("user_id", user!.id)
+        .single();
+      return data;
+    },
+  });
+
+  const canChangeUsername = () => {
+    if (!profileFull?.username_changed_at) return true;
+    const lastChanged = new Date(profileFull.username_changed_at);
+    const now = new Date();
+    const diffDays = (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 30;
+  };
+
+  const usernameCountdown = () => {
+    if (!profileFull?.username_changed_at) return "";
+    const lastChanged = new Date(profileFull.username_changed_at);
+    const nextChange = new Date(lastChanged.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const daysLeft = Math.ceil((nextChange.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    return `bisa diubah dalam ${daysLeft} hari`;
+  };
+
   const handleSaveBio = async () => {
     if (!user) return;
     setSaving(true);
@@ -120,6 +153,36 @@ const Settings = () => {
     } else {
       toast.success("Bio updated (◕‿◕)");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
+    }
+  };
+
+  const handleSaveUsername = async () => {
+    if (!user || !newUsername.trim()) return;
+    setSavingUsername(true);
+    // Check if username is taken
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", newUsername)
+      .neq("user_id", user.id)
+      .maybeSingle();
+    if (existing) {
+      toast.error("Username sudah dipakai (╥﹏╥)");
+      setSavingUsername(false);
+      return;
+    }
+    const { error } = await supabase
+      .from("profiles")
+      .update({ username: newUsername, username_changed_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+    setSavingUsername(false);
+    if (error) {
+      toast.error("Failed to update username");
+    } else {
+      toast.success("Username updated (◕‿◕)");
+      setEditingUsername(false);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
     }
   };
 
@@ -180,7 +243,52 @@ const Settings = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Username</label>
-                  <p className="mt-1 text-sm">@{profile?.username}</p>
+                  {editingUsername ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">@</span>
+                      <input
+                        type="text"
+                        value={newUsername}
+                        onChange={(e) => setNewUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
+                        className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
+                        placeholder="username baru"
+                      />
+                      <Button
+                        onClick={handleSaveUsername}
+                        disabled={savingUsername || !newUsername.trim() || newUsername === profile?.username}
+                        size="sm"
+                      >
+                        {savingUsername ? "saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={() => setEditingUsername(false)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm">@{profile?.username}</p>
+                      <button
+                        onClick={() => {
+                          if (canChangeUsername()) {
+                            setNewUsername(profile?.username || "");
+                            setEditingUsername(true);
+                          }
+                        }}
+                        disabled={!canChangeUsername()}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canChangeUsername() ? "Edit username" : usernameCountdown()}
+                      >
+                        <PenLine className="h-3 w-3 inline" /> edit
+                      </button>
+                      {!canChangeUsername() && (
+                        <span className="text-[10px] text-muted-foreground">{usernameCountdown()}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Email</label>
