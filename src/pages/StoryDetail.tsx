@@ -146,7 +146,7 @@ const StoryDetail = () => {
             <div className="my-8 h-px w-12 bg-border" />
 
             <div
-              className="prose prose-neutral max-w-none leading-relaxed"
+              className={`prose max-w-none leading-relaxed ${darkReading ? "prose-invert" : "prose-neutral"}`}
               style={{ fontSize: `${fontSize}px` }}
               dangerouslySetInnerHTML={{ __html: story.content || "" }}
             />
