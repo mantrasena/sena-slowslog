@@ -51,10 +51,9 @@ const StoryDetail = () => {
   };
 
   return (
-    <div className={darkReading ? "dark" : ""}>
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
-        <Header />
-        <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Header />
+      <main className={`mx-auto w-full max-w-2xl flex-1 px-6 py-8 ${darkReading ? "rounded-lg bg-[hsl(0,0%,6%)] text-[hsl(0,0%,90%)]" : ""}`}>
           <div className="flex items-center justify-between">
             <button onClick={() => navigate(-1)} className="text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft className="inline h-4 w-4" /> back
@@ -129,9 +128,9 @@ const StoryDetail = () => {
 
           <article className="mt-10">
             <h1 className="font-serif text-3xl font-medium tracking-tight">{story.title}</h1>
-            {story.subtitle && <p className="mt-2 text-muted-foreground">{story.subtitle}</p>}
+            {story.subtitle && <p className={`mt-2 ${darkReading ? "text-[hsl(0,0%,60%)]" : "text-muted-foreground"}`}>{story.subtitle}</p>}
 
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className={`mt-4 flex items-center gap-2 text-xs ${darkReading ? "text-[hsl(0,0%,60%)]" : "text-muted-foreground"}`}>
               {story.author && (
                 <>
                   <span className="text-foreground/70">{story.author.display_name}</span>
@@ -147,14 +146,13 @@ const StoryDetail = () => {
             <div className="my-8 h-px w-12 bg-border" />
 
             <div
-              className="prose prose-neutral max-w-none leading-relaxed"
+              className={`prose max-w-none leading-relaxed ${darkReading ? "prose-invert" : "prose-neutral"}`}
               style={{ fontSize: `${fontSize}px` }}
               dangerouslySetInnerHTML={{ __html: story.content || "" }}
             />
           </article>
         </main>
       </div>
-    </div>
   );
 };
 
