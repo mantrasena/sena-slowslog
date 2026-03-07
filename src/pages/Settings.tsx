@@ -127,18 +127,17 @@ const Settings = () => {
     },
   });
 
-  const canChangeUsername = () => {
-    if (!profileFull?.username_changed_at) return true;
-    const lastChanged = new Date(profileFull.username_changed_at);
-    const now = new Date();
-    const diffDays = (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+  const canChange = (field: 'username' | 'display_name') => {
+    const changedAt = field === 'username' ? profileFull?.username_changed_at : profileFull?.display_name_changed_at;
+    if (!changedAt) return true;
+    const diffDays = (Date.now() - new Date(changedAt).getTime()) / (1000 * 60 * 60 * 24);
     return diffDays >= 30;
   };
 
-  const usernameCountdown = () => {
-    if (!profileFull?.username_changed_at) return "";
-    const lastChanged = new Date(profileFull.username_changed_at);
-    const nextChange = new Date(lastChanged.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const countdown = (field: 'username' | 'display_name') => {
+    const changedAt = field === 'username' ? profileFull?.username_changed_at : profileFull?.display_name_changed_at;
+    if (!changedAt) return "";
+    const nextChange = new Date(new Date(changedAt).getTime() + 30 * 24 * 60 * 60 * 1000);
     const daysLeft = Math.ceil((nextChange.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return `bisa diubah dalam ${daysLeft} hari`;
   };
