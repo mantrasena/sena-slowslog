@@ -24,6 +24,9 @@ const Settings = () => {
   const [newUsername, setNewUsername] = useState("");
   const [editingUsername, setEditingUsername] = useState(false);
   const [savingUsername, setSavingUsername] = useState(false);
+  const [newDisplayName, setNewDisplayName] = useState("");
+  const [editingDisplayName, setEditingDisplayName] = useState(false);
+  const [savingDisplayName, setSavingDisplayName] = useState(false);
 
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
@@ -117,25 +120,24 @@ const Settings = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("username_changed_at")
+        .select("username_changed_at, display_name_changed_at")
         .eq("user_id", user!.id)
         .single();
       return data;
     },
   });
 
-  const canChangeUsername = () => {
-    if (!profileFull?.username_changed_at) return true;
-    const lastChanged = new Date(profileFull.username_changed_at);
-    const now = new Date();
-    const diffDays = (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24);
+  const canChange = (field: 'username' | 'display_name') => {
+    const changedAt = field === 'username' ? profileFull?.username_changed_at : profileFull?.display_name_changed_at;
+    if (!changedAt) return true;
+    const diffDays = (Date.now() - new Date(changedAt).getTime()) / (1000 * 60 * 60 * 24);
     return diffDays >= 30;
   };
 
-  const usernameCountdown = () => {
-    if (!profileFull?.username_changed_at) return "";
-    const lastChanged = new Date(profileFull.username_changed_at);
-    const nextChange = new Date(lastChanged.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const countdown = (field: 'username' | 'display_name') => {
+    const changedAt = field === 'username' ? profileFull?.username_changed_at : profileFull?.display_name_changed_at;
+    if (!changedAt) return "";
+    const nextChange = new Date(new Date(changedAt).getTime() + 30 * 24 * 60 * 60 * 1000);
     const daysLeft = Math.ceil((nextChange.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
     return `bisa diubah dalam ${daysLeft} hari`;
   };
@@ -181,6 +183,24 @@ const Settings = () => {
     } else {
       toast.success("Username updated (◕‿◕)");
       setEditingUsername(false);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
+    }
+  };
+
+  const handleSaveDisplayName = async () => {
+    if (!user || !newDisplayName.trim()) return;
+    setSavingDisplayName(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: newDisplayName.trim(), display_name_changed_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+    setSavingDisplayName(false);
+    if (error) {
+      toast.error("Failed to update display name");
+    } else {
+      toast.success("Display name updated (◕‿◕)");
+      setEditingDisplayName(false);
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       queryClient.invalidateQueries({ queryKey: ["profile-full"] });
     }
@@ -273,19 +293,19 @@ const Settings = () => {
                       <p className="text-sm">@{profile?.username}</p>
                       <button
                         onClick={() => {
-                          if (canChangeUsername()) {
+                          if (canChange('username')) {
                             setNewUsername(profile?.username || "");
                             setEditingUsername(true);
                           }
                         }}
-                        disabled={!canChangeUsername()}
+                        disabled={!canChange('username')}
                         className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-                        title={canChangeUsername() ? "Edit username" : usernameCountdown()}
+                        title={canChange('username') ? "Edit username" : countdown('username')}
                       >
                         <PenLine className="h-3 w-3 inline" /> edit
                       </button>
-                      {!canChangeUsername() && (
-                        <span className="text-[10px] text-muted-foreground">{usernameCountdown()}</span>
+                      {!canChange('username') && (
+                        <span className="text-[10px] text-muted-foreground">{countdown('username')}</span>
                       )}
                     </div>
                   )}
@@ -296,7 +316,52 @@ const Settings = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Display Name</label>
-                  <p className="mt-1 text-sm">{profile?.display_name}</p>
+                  {editingDisplayName ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newDisplayName}
+                        onChange={(e) => setNewDisplayName(e.target.value)}
+                        className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
+                        placeholder="display name baru"
+                        maxLength={50}
+                      />
+                      <Button
+                        onClick={handleSaveDisplayName}
+                        disabled={savingDisplayName || !newDisplayName.trim() || newDisplayName === profile?.display_name}
+                        size="sm"
+                      >
+                        {savingDisplayName ? "saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={() => setEditingDisplayName(false)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm">{profile?.display_name}</p>
+                      <button
+                        onClick={() => {
+                          if (canChange('display_name')) {
+                            setNewDisplayName(profile?.display_name || "");
+                            setEditingDisplayName(true);
+                          }
+                        }}
+                        disabled={!canChange('display_name')}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canChange('display_name') ? "Edit display name" : countdown('display_name')}
+                      >
+                        <PenLine className="h-3 w-3 inline" /> edit
+                      </button>
+                      {!canChange('display_name') && (
+                        <span className="text-[10px] text-muted-foreground">{countdown('display_name')}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="bio" className="text-xs font-medium text-muted-foreground">Bio</label>

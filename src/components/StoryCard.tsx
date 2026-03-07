@@ -30,7 +30,13 @@ const StoryCard = ({ story, showPinned }: StoryCardProps) => {
       <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
         {story.author && (
           <>
-            <span className="text-foreground/70">{story.author.display_name}</span>
+            <Link
+              to={`/profile/${story.author.username}`}
+              className="text-foreground/70 hover:text-foreground transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {story.author.display_name}
+            </Link>
             <RoleBadge role={story.author.role} />
             <span>·</span>
           </>
