@@ -293,19 +293,19 @@ const Settings = () => {
                       <p className="text-sm">@{profile?.username}</p>
                       <button
                         onClick={() => {
-                          if (canChangeUsername()) {
+                          if (canChange('username')) {
                             setNewUsername(profile?.username || "");
                             setEditingUsername(true);
                           }
                         }}
-                        disabled={!canChangeUsername()}
+                        disabled={!canChange('username')}
                         className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-                        title={canChangeUsername() ? "Edit username" : usernameCountdown()}
+                        title={canChange('username') ? "Edit username" : countdown('username')}
                       >
                         <PenLine className="h-3 w-3 inline" /> edit
                       </button>
-                      {!canChangeUsername() && (
-                        <span className="text-[10px] text-muted-foreground">{usernameCountdown()}</span>
+                      {!canChange('username') && (
+                        <span className="text-[10px] text-muted-foreground">{countdown('username')}</span>
                       )}
                     </div>
                   )}
@@ -316,7 +316,52 @@ const Settings = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Display Name</label>
-                  <p className="mt-1 text-sm">{profile?.display_name}</p>
+                  {editingDisplayName ? (
+                    <div className="mt-1 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newDisplayName}
+                        onChange={(e) => setNewDisplayName(e.target.value)}
+                        className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
+                        placeholder="display name baru"
+                        maxLength={50}
+                      />
+                      <Button
+                        onClick={handleSaveDisplayName}
+                        disabled={savingDisplayName || !newDisplayName.trim() || newDisplayName === profile?.display_name}
+                        size="sm"
+                      >
+                        {savingDisplayName ? "saving..." : "Save"}
+                      </Button>
+                      <Button
+                        onClick={() => setEditingDisplayName(false)}
+                        variant="ghost"
+                        size="sm"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-1 flex items-center gap-2">
+                      <p className="text-sm">{profile?.display_name}</p>
+                      <button
+                        onClick={() => {
+                          if (canChange('display_name')) {
+                            setNewDisplayName(profile?.display_name || "");
+                            setEditingDisplayName(true);
+                          }
+                        }}
+                        disabled={!canChange('display_name')}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+                        title={canChange('display_name') ? "Edit display name" : countdown('display_name')}
+                      >
+                        <PenLine className="h-3 w-3 inline" /> edit
+                      </button>
+                      {!canChange('display_name') && (
+                        <span className="text-[10px] text-muted-foreground">{countdown('display_name')}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="bio" className="text-xs font-medium text-muted-foreground">Bio</label>
