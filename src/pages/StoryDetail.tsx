@@ -153,7 +153,6 @@ const StoryDetail = () => {
           </article>
         </main>
       </div>
-    </div>
   );
 };
 
