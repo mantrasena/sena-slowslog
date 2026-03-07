@@ -188,6 +188,24 @@ const Settings = () => {
     }
   };
 
+  const handleSaveDisplayName = async () => {
+    if (!user || !newDisplayName.trim()) return;
+    setSavingDisplayName(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ display_name: newDisplayName.trim(), display_name_changed_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+    setSavingDisplayName(false);
+    if (error) {
+      toast.error("Failed to update display name");
+    } else {
+      toast.success("Display name updated (◕‿◕)");
+      setEditingDisplayName(false);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
+    }
+  };
+
   // PDF export helpers
   const toggleAll = () => {
     if (selected.size === (stories?.length || 0)) {
