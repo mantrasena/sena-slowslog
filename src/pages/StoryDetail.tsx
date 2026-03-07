@@ -130,7 +130,7 @@ const StoryDetail = () => {
             <h1 className="font-serif text-3xl font-medium tracking-tight">{story.title}</h1>
             {story.subtitle && <p className={`mt-2 ${darkReading ? "text-[hsl(0,0%,60%)]" : "text-muted-foreground"}`}>{story.subtitle}</p>}
 
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+            <div className={`mt-4 flex items-center gap-2 text-xs ${darkReading ? "text-[hsl(0,0%,60%)]" : "text-muted-foreground"}`}>
               {story.author && (
                 <>
                   <span className="text-foreground/70">{story.author.display_name}</span>
