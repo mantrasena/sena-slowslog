@@ -120,7 +120,7 @@ const Settings = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("username_changed_at")
+        .select("username_changed_at, display_name_changed_at")
         .eq("user_id", user!.id)
         .single();
       return data;
