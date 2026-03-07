@@ -51,10 +51,9 @@ const StoryDetail = () => {
   };
 
   return (
-    <div className={darkReading ? "dark" : ""}>
-      <div className="flex min-h-screen flex-col bg-background text-foreground">
-        <Header />
-        <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-8">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Header />
+      <main className={`mx-auto w-full max-w-2xl flex-1 px-6 py-8 ${darkReading ? "dark" : ""}`}>
           <div className="flex items-center justify-between">
             <button onClick={() => navigate(-1)} className="text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft className="inline h-4 w-4" /> back
