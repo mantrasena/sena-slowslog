@@ -146,9 +146,11 @@ const Admin = () => {
     toast.success(newValue ? "Inner Circle enabled (★‿★)" : "Inner Circle disabled");
   };
 
+  const canAccessAdmin = isFounder || isAdmin;
+
   useEffect(() => {
-    if (!loading && !isFounder) navigate("/");
-  }, [loading, isFounder]);
+    if (!loading && !canAccessAdmin) navigate("/");
+  }, [loading, canAccessAdmin]);
 
   useEffect(() => {
     fetchUsers();
