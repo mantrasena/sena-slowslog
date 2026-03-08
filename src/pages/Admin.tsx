@@ -369,7 +369,7 @@ const Admin = () => {
       <main className="flex-1">
         <section className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="font-serif text-xl font-medium">admin dashboard</h1>
-          <p className="mt-1 text-xs text-muted-foreground">founder access only (*´▽`*)</p>
+          <p className="mt-1 text-xs text-muted-foreground">{isFounder ? "founder" : "admin"} access (*´▽`*)</p>
 
           <Tabs defaultValue="users" className="mt-8">
             <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0 overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-none">
