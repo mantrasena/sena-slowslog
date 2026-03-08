@@ -25,6 +25,7 @@ const Write = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [wordCount, setWordCount] = useState(0);
   const [preview, setPreview] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
@@ -196,7 +197,7 @@ const Write = () => {
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
-            <button onClick={() => setPreview(false)} className="text-sm text-muted-foreground hover:text-foreground">
+            <button onClick={() => { setPreview(false); requestAnimationFrame(() => { if (contentRef.current) contentRef.current.innerHTML = previewHtml; }); }} className="text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft className="inline h-4 w-4" /> edit
             </button>
             <span className="text-xs text-muted-foreground">preview</span>
@@ -208,7 +209,7 @@ const Write = () => {
           <div className="my-6 h-px w-12 bg-border" />
           <div
             className="prose prose-neutral max-w-none text-lg leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: contentRef.current?.innerHTML || "" }}
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
       </div>
@@ -230,7 +231,7 @@ const Write = () => {
               {autoSaveStatus === "saving" ? "saving..." : autoSaveStatus === "saved" ? "saved ✓" : `${wordCount} words · ${readTime} min`}
             </span>
             <button
-              onClick={() => setPreview(true)}
+              onClick={() => { setPreviewHtml(contentRef.current?.innerHTML || ""); setPreview(true); }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               <Eye className="inline h-3.5 w-3.5" /> preview
