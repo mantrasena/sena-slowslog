@@ -165,7 +165,15 @@ const StoryDetail = () => {
             <div
               className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit]"
               style={{ fontSize: `${fontSize}px` }}
-              dangerouslySetInnerHTML={{ __html: story.content?.replace(/style="[^"]*"/gi, '') || "" }}
+              dangerouslySetInnerHTML={{
+                __html: (story.content || "")
+                  .replace(/style="[^"]*"/gi, "")
+                  .replace(/class="[^"]*"/gi, "")
+                  .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
+                  .replace(/\s*size="[^"]*"/gi, "")
+                  .replace(/\s*face="[^"]*"/gi, "")
+                  .replace(/\s*color="[^"]*"/gi, ""),
+              }}
             />
 
             {/* High Five */}

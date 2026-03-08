@@ -304,12 +304,13 @@ const Write = () => {
             const html = e.clipboardData.getData("text/html");
             const text = e.clipboardData.getData("text/plain");
             if (html) {
-              // Strip all inline styles but keep structure (bold, italic, links, images)
               const cleaned = html
                 .replace(/style="[^"]*"/gi, "")
                 .replace(/class="[^"]*"/gi, "")
-                .replace(/<font[^>]*>/gi, "")
-                .replace(/<\/font>/gi, "");
+                .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
+                .replace(/\s*size="[^"]*"/gi, "")
+                .replace(/\s*face="[^"]*"/gi, "")
+                .replace(/\s*color="[^"]*"/gi, "");
               document.execCommand("insertHTML", false, cleaned);
             } else {
               document.execCommand("insertText", false, text);
