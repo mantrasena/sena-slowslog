@@ -30,6 +30,7 @@ const Write = () => {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
+  const currentIdRef = useRef<string | null>(editId);
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
@@ -50,13 +51,10 @@ const Write = () => {
     if (!user) navigate("/auth");
   }, [user]);
 
-  // Auto-save as draft every 30 seconds
+  // Sync currentIdRef when editId changes
   useEffect(() => {
-    const interval = setInterval(() => {
-      autoSaveDraft();
-    }, AUTO_SAVE_INTERVAL);
-    return () => clearInterval(interval);
-  }, [title, subtitle, editId, user]);
+    if (editId) currentIdRef.current = editId;
+  }, [editId]);
 
   const autoSaveDraft = useCallback(async () => {
     if (!user || !contentRef.current) return;
@@ -68,20 +66,33 @@ const Write = () => {
 
     setAutoSaveStatus("saving");
     try {
-      await saveMutation.mutateAsync({
-        id: editId || undefined,
+      const result = await saveMutation.mutateAsync({
+        id: currentIdRef.current || undefined,
         title: title || "untitled",
         subtitle,
         content,
         is_draft: true,
       });
+      // Track the saved ID so subsequent auto-saves update instead of insert
+      if (result?.id && !currentIdRef.current) {
+        currentIdRef.current = result.id;
+        window.history.replaceState(null, "", `/write?edit=${result.id}`);
+      }
       lastSavedRef.current = current;
       setAutoSaveStatus("saved");
       setTimeout(() => setAutoSaveStatus("idle"), 2000);
     } catch {
       setAutoSaveStatus("idle");
     }
-  }, [title, subtitle, editId, user, saveMutation]);
+  }, [title, subtitle, user, saveMutation]);
+
+  // Auto-save as draft every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSaveDraft();
+    }, AUTO_SAVE_INTERVAL);
+    return () => clearInterval(interval);
+  }, [autoSaveDraft]);
 
   const updateWordCount = useCallback(() => {
     const text = contentRef.current?.innerText || "";
@@ -113,13 +124,14 @@ const Write = () => {
       return;
     }
     try {
-      await saveMutation.mutateAsync({
-        id: editId || undefined,
+      const result = await saveMutation.mutateAsync({
+        id: currentIdRef.current || editId || undefined,
         title,
         subtitle,
         content,
         is_draft: isDraft,
       });
+      if (result?.id) currentIdRef.current = result.id;
       lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
       navigate(isDraft ? "/drafts" : "/");
