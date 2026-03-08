@@ -123,7 +123,7 @@ const InnerCircle = () => {
                   plan.popular
                     ? "border-[hsl(45,80%,65%)] bg-[hsl(45,80%,97%)]"
                     : "border-border"
-                } ${selectedPlan === plan.id ? "ring-2 ring-[hsl(45,90%,50%)]" : ""}`}
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-4 inline-flex items-center gap-1 rounded-full bg-[hsl(45,90%,50%)] px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
