@@ -88,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         roles,
         loading,
         isFounder: roles.includes("founder"),
+        isAdmin: roles.includes("admin"),
       }}
     >
       {children}
