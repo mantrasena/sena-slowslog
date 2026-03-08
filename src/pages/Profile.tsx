@@ -37,6 +37,10 @@ const Profile = () => {
         .select("role")
         .eq("user_id", profile.user_id);
 
+      const allRoles = (roles || []).map((r) => r.role as Role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+      const hasInnerCircle = allRoles.includes("inner_circle");
+
       const storyCount = await supabase
         .from("stories")
         .select("id", { count: "exact", head: true })
@@ -45,7 +49,8 @@ const Profile = () => {
 
       return {
         ...profile,
-        role: (roles?.[0]?.role || "writer") as Role,
+        role: primaryRole as Role,
+        hasInnerCircle,
         storyCount: storyCount.count || 0,
       };
     },
