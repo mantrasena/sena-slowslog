@@ -27,6 +27,7 @@ const AuthContext = createContext<AuthUser>({
   roles: [],
   loading: true,
   isFounder: false,
+  isAdmin: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
