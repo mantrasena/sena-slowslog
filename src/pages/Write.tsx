@@ -64,6 +64,9 @@ const Write = () => {
     const current = JSON.stringify({ title, subtitle, content });
     if (current === lastSavedRef.current) return; // No changes
 
+    // If editing a published story, keep it published (don't revert to draft)
+    const keepPublished = !!editId && existingStory && !existingStory.is_draft;
+
     setAutoSaveStatus("saving");
     try {
       const result = await saveMutation.mutateAsync({
@@ -71,7 +74,7 @@ const Write = () => {
         title: title || "untitled",
         subtitle,
         content,
-        is_draft: true,
+        is_draft: keepPublished ? false : true,
       });
       // Track the saved ID so subsequent auto-saves update instead of insert
       if (result?.id && !currentIdRef.current) {
@@ -84,7 +87,7 @@ const Write = () => {
     } catch {
       setAutoSaveStatus("idle");
     }
-  }, [title, subtitle, user, saveMutation]);
+  }, [title, subtitle, user, saveMutation, editId, existingStory]);
 
   // Auto-save as draft every 30 seconds
   useEffect(() => {
