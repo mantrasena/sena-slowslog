@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sena-v1';
+const CACHE_NAME = 'sena-v2';
 const PRECACHE = ['/', '/favicon.ico'];
 
 self.addEventListener('install', (e) => {
