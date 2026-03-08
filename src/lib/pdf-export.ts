@@ -16,6 +16,8 @@ interface TextBlock {
 
 const sanitizeHtml = (html: string): string =>
   html
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\u00A0/g, " ")
     .replace(/style="[^"]*"/gi, "")
     .replace(/class="[^"]*"/gi, "")
     .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
