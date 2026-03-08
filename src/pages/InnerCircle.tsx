@@ -45,9 +45,6 @@ const InnerCircle = () => {
   const navigate = useNavigate();
   const { user, roles } = useAuth();
   const isInnerCircle = roles.includes("inner_circle");
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [proofFile, setProofFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const { data: featureEnabled } = useQuery({
     queryKey: ["site-settings", "inner_circle_enabled"],
@@ -61,7 +58,6 @@ const InnerCircle = () => {
     },
   });
 
-  // Check if user has a pending order
   const { data: pendingOrder } = useQuery({
     queryKey: ["ic-order-pending", user?.id],
     enabled: !!user,
@@ -81,46 +77,7 @@ const InnerCircle = () => {
       navigate("/auth");
       return;
     }
-    setSelectedPlan(planId);
-  };
-
-  const handleSubmitOrder = async () => {
-    if (!user || !selectedPlan || !proofFile) return;
-
-    setSubmitting(true);
-    try {
-      // Upload transfer proof
-      const compressed = await compressImage(proofFile);
-      const ext = proofFile.name.split(".").pop() || "jpg";
-      const filePath = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("transfer-proofs")
-        .upload(filePath, compressed);
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("transfer-proofs")
-        .getPublicUrl(filePath);
-
-      // Insert order
-      const { error: insertError } = await supabase.from("ic_orders").insert({
-        user_id: user.id,
-        email: user.email || "",
-        plan: selectedPlan,
-        transfer_proof_url: urlData.publicUrl,
-      } as any);
-
-      if (insertError) throw insertError;
-
-      toast.success("Order submitted! We'll review it soon (◕ᴗ◕✿)");
-      setSelectedPlan(null);
-      setProofFile(null);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to submit order");
-    } finally {
-      setSubmitting(false);
-    }
+    navigate(`/inner-circle/payment?plan=${planId}`);
   };
 
   return (
