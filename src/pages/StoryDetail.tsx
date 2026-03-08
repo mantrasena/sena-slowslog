@@ -36,6 +36,8 @@ const StoryDetail = () => {
   const { user } = useAuth();
   const deleteMutation = useDeleteStory();
   const pinMutation = useTogglePin();
+  const visibilityMutation = useToggleVisibility();
+  const hiddenMutation = useToggleHidden();
   const { data: bookmarks } = useBookmarks();
   const bookmarkMutation = useToggleBookmark();
   const { data: highFiveCount } = useHighFiveCount(id);
