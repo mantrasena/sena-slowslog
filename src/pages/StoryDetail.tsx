@@ -28,6 +28,9 @@ const StoryDetail = () => {
   const pinMutation = useTogglePin();
   const { data: bookmarks } = useBookmarks();
   const bookmarkMutation = useToggleBookmark();
+  const { data: highFiveCount } = useHighFiveCount(id);
+  const { data: hasHighFived } = useHasHighFived(id);
+  const highFiveMutation = useToggleHighFive();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
 
