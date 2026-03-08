@@ -108,26 +108,26 @@ const AnalyticsTab = () => {
   }, [stories]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-md border border-border p-4">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Eye className="h-3.5 w-3.5" /> Views
+      <div className="grid grid-cols-3 gap-2">
+        <div className="rounded-md border border-border p-3 min-w-0">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <Eye className="h-3 w-3 flex-shrink-0" /> Views
           </div>
-          <p className="mt-1 text-2xl font-medium">{totalViews}</p>
+          <p className="mt-1 text-xl font-medium">{totalViews}</p>
         </div>
-        <div className="rounded-md border border-border p-4">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <HandMetal className="h-3.5 w-3.5" /> High Fives
+        <div className="rounded-md border border-border p-3 min-w-0">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <HandMetal className="h-3 w-3 flex-shrink-0" /> High Fives
           </div>
-          <p className="mt-1 text-2xl font-medium">{totalHighFives}</p>
+          <p className="mt-1 text-xl font-medium">{totalHighFives}</p>
         </div>
-        <div className="rounded-md border border-border p-4">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <TrendingUp className="h-3.5 w-3.5" /> Engagement
+        <div className="rounded-md border border-border p-3 min-w-0">
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <TrendingUp className="h-3 w-3 flex-shrink-0" /> Engagement
           </div>
-          <p className="mt-1 text-2xl font-medium">{engagementRate}%</p>
+          <p className="mt-1 text-xl font-medium">{engagementRate}%</p>
         </div>
       </div>
 
