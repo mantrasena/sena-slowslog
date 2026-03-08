@@ -383,6 +383,7 @@ const Settings = () => {
                     {saving ? "saving..." : "Save bio"}
                   </Button>
                 </div>
+                {!isFounder && <CooldownDisplay />}
               </div>
             </TabsContent>
 
