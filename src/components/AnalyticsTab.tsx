@@ -110,7 +110,7 @@ const AnalyticsTab = () => {
   return (
     <div className="space-y-8 overflow-x-hidden">
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2">
         <div className="rounded-md border border-border p-4">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Eye className="h-3.5 w-3.5" /> Views
