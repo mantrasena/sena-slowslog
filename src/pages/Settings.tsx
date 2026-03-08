@@ -302,6 +302,56 @@ const Settings = () => {
     setSelected(next);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const compressed = await compressImage(file);
+      const filePath = `${user.id}/avatar.webp`;
+      // Remove old avatar first
+      await supabase.storage.from("avatars").remove([filePath]);
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, compressed, { contentType: "image/webp", upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("user_id", user.id);
+      if (updateError) throw updateError;
+      toast.success("Profile photo updated (◕‿◕)");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    setUploadingAvatar(true);
+    try {
+      await supabase.storage.from("avatars").remove([`${user.id}/avatar.webp`]);
+      await supabase.from("profiles").update({ avatar_url: null }).eq("user_id", user.id);
+      toast.success("Profile photo removed");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch {
+      toast.error("Failed to remove photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleExport = () => {
     if (!selected.size || !stories) return;
     const toExport = stories.filter((s) => selected.has(s.id)).map((s) => ({
