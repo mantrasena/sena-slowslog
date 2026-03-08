@@ -68,7 +68,7 @@ const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
   };
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} shouldFilter={false}>
       <CommandInput placeholder="Search stories & users..." value={query} onValueChange={setQuery} />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
