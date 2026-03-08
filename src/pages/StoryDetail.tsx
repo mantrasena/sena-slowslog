@@ -6,7 +6,8 @@ import { useStory, useDeleteStory, useTogglePin, useToggleVisibility, useToggleH
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
 import { useRecordView } from "@/hooks/useRecordView";
-import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, EyeOff, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal, Globe, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, EyeOff, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal, Globe, BadgeCheck, Lock } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/useHighFives";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
@@ -56,6 +57,8 @@ const StoryDetail = () => {
 
   const isOwner = user?.id === story.user_id;
   const hasInnerCircleRole = roles.includes("inner_circle");
+  const isInnerCircleStory = story.visibility === "inner_circle";
+  const isContentLocked = isInnerCircleStory && !isOwner && !hasInnerCircleRole;
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
   const handleDelete = async () => {
@@ -192,23 +195,56 @@ const StoryDetail = () => {
 
             <div className="my-8 h-px w-12 bg-border" />
 
-            <div
-              className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit]"
-              style={{ fontSize: `${fontSize}px` }}
-              dangerouslySetInnerHTML={{
-                __html: (story.content || "")
-                  .replace(/style="[^"]*"/gi, "")
-                  .replace(/class="[^"]*"/gi, "")
-                  .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
-                  .replace(/\s*size="[^"]*"/gi, "")
-                  .replace(/\s*face="[^"]*"/gi, "")
-                  .replace(/\s*color="[^"]*"/gi, "")
-                  .replace(/<blockquote[^>]*>/gi, "<p>")
-                  .replace(/<\/blockquote>/gi, "</p>"),
-              }}
-            />
+            {isContentLocked ? (
+              <div className="relative">
+                <div
+                  className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground"
+                  style={{ fontSize: `${fontSize}px` }}
+                >
+                  <p>{story.content || ""}</p>
+                </div>
+                <div
+                  className="absolute inset-0 top-16"
+                  style={{
+                    backdropFilter: "blur(8px)",
+                    WebkitBackdropFilter: "blur(8px)",
+                    background: "linear-gradient(to bottom, transparent 0%, hsl(var(--background) / 0.6) 20%, hsl(var(--background) / 0.95) 60%)",
+                  }}
+                />
+                <div className="relative z-10 -mt-8 flex flex-col items-center justify-center py-16 text-center">
+                  <VerifiedBadge size="md" className="mb-3" />
+                  <p className="font-serif text-lg font-medium">Inner Circle Only</p>
+                  <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                    This story is exclusive to Inner Circle members. Join to read the full content.
+                  </p>
+                  <Link
+                    to="/inner-circle"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[hsl(45,90%,50%)] px-4 py-2 text-xs font-medium text-[hsl(45,90%,50%)] transition-colors hover:bg-[hsl(45,90%,50%)]/10"
+                  >
+                    <Lock className="h-3 w-3" /> Join Inner Circle
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit]"
+                style={{ fontSize: `${fontSize}px` }}
+                dangerouslySetInnerHTML={{
+                  __html: (story.content || "")
+                    .replace(/style="[^"]*"/gi, "")
+                    .replace(/class="[^"]*"/gi, "")
+                    .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
+                    .replace(/\s*size="[^"]*"/gi, "")
+                    .replace(/\s*face="[^"]*"/gi, "")
+                    .replace(/\s*color="[^"]*"/gi, "")
+                    .replace(/<blockquote[^>]*>/gi, "<p>")
+                    .replace(/<\/blockquote>/gi, "</p>"),
+                }}
+              />
+            )}
 
             {/* High Five */}
+            {!isContentLocked && (
             <div className="mt-12 flex items-center gap-3">
               <TooltipProvider>
                 <Tooltip>
@@ -237,6 +273,7 @@ const StoryDetail = () => {
                 </Tooltip>
               </TooltipProvider>
             </div>
+            )}
 
             {/* Divider */}
             <div className="my-10 h-px w-full bg-border" />
