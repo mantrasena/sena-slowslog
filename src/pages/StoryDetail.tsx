@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
