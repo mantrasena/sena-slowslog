@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import KaomojiPicker from "@/components/KaomojiPicker";
 
+const AUTO_SAVE_INTERVAL = 30_000; // 30 seconds
+
 const Write = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -25,6 +27,9 @@ const Write = () => {
   const [preview, setPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSavedRef = useRef<string>("");
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
@@ -32,12 +37,51 @@ const Write = () => {
       setSubtitle(existingStory.subtitle || "");
       contentRef.current.innerHTML = existingStory.content || "";
       updateWordCount();
+      // Track initial content to avoid unnecessary saves
+      lastSavedRef.current = JSON.stringify({
+        title: existingStory.title,
+        subtitle: existingStory.subtitle || "",
+        content: existingStory.content || "",
+      });
     }
   }, [existingStory]);
 
   useEffect(() => {
     if (!user) navigate("/auth");
   }, [user]);
+
+  // Auto-save as draft every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSaveDraft();
+    }, AUTO_SAVE_INTERVAL);
+    return () => clearInterval(interval);
+  }, [title, subtitle, editId, user]);
+
+  const autoSaveDraft = useCallback(async () => {
+    if (!user || !contentRef.current) return;
+    const content = contentRef.current.innerHTML || "";
+    if (!title.trim() && !content.trim()) return;
+
+    const current = JSON.stringify({ title, subtitle, content });
+    if (current === lastSavedRef.current) return; // No changes
+
+    setAutoSaveStatus("saving");
+    try {
+      await saveMutation.mutateAsync({
+        id: editId || undefined,
+        title: title || "untitled",
+        subtitle,
+        content,
+        is_draft: true,
+      });
+      lastSavedRef.current = current;
+      setAutoSaveStatus("saved");
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+    } catch {
+      setAutoSaveStatus("idle");
+    }
+  }, [title, subtitle, editId, user, saveMutation]);
 
   const updateWordCount = useCallback(() => {
     const text = contentRef.current?.innerText || "";
@@ -49,7 +93,6 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
-  // Check if this is editing an already-published story (no cooldown needed for edits)
   const isEditingPublished = !!editId && existingStory && !existingStory.is_draft;
   const canPublish = isFounder || isEditingPublished || cooldown?.canPublish !== false;
 
@@ -66,7 +109,7 @@ const Write = () => {
       return;
     }
     if (!isDraft && !canPublish) {
-      toast.error(`kamu bisa publish lagi dalam ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h (◞‸◟)`);
+      toast.error(`you can publish again in ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h (◞‸◟)`);
       return;
     }
     try {
@@ -77,6 +120,7 @@ const Write = () => {
         content,
         is_draft: isDraft,
       });
+      lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
       navigate(isDraft ? "/drafts" : "/");
     } catch (e: any) {
@@ -168,7 +212,7 @@ const Write = () => {
           </button>
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-muted-foreground">
-              {wordCount} words · {readTime} min
+              {autoSaveStatus === "saving" ? "saving..." : autoSaveStatus === "saved" ? "saved ✓" : `${wordCount} words · ${readTime} min`}
             </span>
             <button
               onClick={() => setPreview(true)}
@@ -187,7 +231,7 @@ const Write = () => {
               onClick={() => handleSave(false)}
               disabled={saveMutation.isPending || !canPublish}
               className="rounded-md bg-foreground px-3 py-1 text-xs text-background hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={!canPublish ? `kamu bisa publish lagi dalam ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h` : ""}
+              title={!canPublish ? `you can publish again in ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h` : ""}
             >
               {publishLabel()}
             </button>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
 import Header from "@/components/Header";
@@ -10,7 +10,7 @@ import { exportArticlesToPDF } from "@/lib/pdf-export";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
@@ -27,19 +27,62 @@ const CooldownDisplay = () => {
       </div>
       {cooldown?.canPublish ? (
         <p className="mt-1.5 text-xs text-muted-foreground">
-          kamu bisa menulis dan publish sekarang ✿
+          you can write and publish now ✿
         </p>
       ) : (
         <p className="mt-1.5 text-xs text-muted-foreground">
-          kamu bisa menulis lagi dalam{" "}
+          you can write again in{" "}
           <span className="font-medium text-foreground">
-            {cooldown?.daysLeft ? `${cooldown.daysLeft} hari ${cooldown.hoursLeft} jam` : `${cooldown?.hoursLeft} jam`}
+            {cooldown?.daysLeft ? `${cooldown.daysLeft} days ${cooldown.hoursLeft} hours` : `${cooldown?.hoursLeft} hours`}
           </span>{" "}
-          lagi (◕ᴗ◕✿)
+          (◕ᴗ◕✿)
         </p>
       )}
     </div>
   );
+};
+
+const getDateFilterOptions = () => {
+  const now = new Date();
+  const options: { label: string; value: string; startDate: Date | null }[] = [
+    { label: "All time", value: "all", startDate: null },
+  ];
+  // Add last 12 months
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    options.push({ label, value: `month-${i}`, startDate: d });
+  }
+  // Add years
+  const currentYear = now.getFullYear();
+  for (let y = currentYear; y >= currentYear - 3; y--) {
+    options.push({ label: `${y}`, value: `year-${y}`, startDate: new Date(y, 0, 1) });
+  }
+  return options;
+};
+
+const filterStoriesByDate = (stories: any[], filterValue: string) => {
+  if (filterValue === "all") return stories;
+  const now = new Date();
+  if (filterValue.startsWith("month-")) {
+    const monthsAgo = parseInt(filterValue.split("-")[1]);
+    const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
+    return stories.filter((s) => {
+      const d = new Date(s.published_at || s.created_at);
+      return d >= start && d <= end;
+    });
+  }
+  if (filterValue.startsWith("year-")) {
+    const year = parseInt(filterValue.split("-")[1]);
+    const start = new Date(year, 0, 1);
+    const end = new Date(year, 11, 31, 23, 59, 59);
+    return stories.filter((s) => {
+      const d = new Date(s.published_at || s.created_at);
+      return d >= start && d <= end;
+    });
+  }
+  return stories;
 };
 
 const Settings = () => {
@@ -55,6 +98,9 @@ const Settings = () => {
   const [newDisplayName, setNewDisplayName] = useState("");
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
+  const [dateFilter, setDateFilter] = useState("all");
+
+  const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
@@ -70,6 +116,8 @@ const Settings = () => {
       return data || [];
     },
   });
+
+  const filteredStories = useMemo(() => filterStoriesByDate(stories || [], dateFilter), [stories, dateFilter]);
 
   // Fetch bookmarked stories
   const { data: bookmarkedStories, isLoading: bookmarksLoading } = useQuery({
@@ -167,7 +215,7 @@ const Settings = () => {
     if (!changedAt) return "";
     const nextChange = new Date(new Date(changedAt).getTime() + 30 * 24 * 60 * 60 * 1000);
     const daysLeft = Math.ceil((nextChange.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return `bisa diubah dalam ${daysLeft} hari`;
+    return `can be changed in ${daysLeft} days`;
   };
 
   const handleSaveBio = async () => {
@@ -189,7 +237,6 @@ const Settings = () => {
   const handleSaveUsername = async () => {
     if (!user || !newUsername.trim()) return;
     setSavingUsername(true);
-    // Check if username is taken
     const { data: existing } = await supabase
       .from("profiles")
       .select("id")
@@ -197,7 +244,7 @@ const Settings = () => {
       .neq("user_id", user.id)
       .maybeSingle();
     if (existing) {
-      toast.error("Username sudah dipakai (╥﹏╥)");
+      toast.error("Username already taken (╥﹏╥)");
       setSavingUsername(false);
       return;
     }
@@ -236,10 +283,10 @@ const Settings = () => {
 
   // PDF export helpers
   const toggleAll = () => {
-    if (selected.size === (stories?.length || 0)) {
+    if (selected.size === filteredStories.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set((stories || []).map((s) => s.id)));
+      setSelected(new Set(filteredStories.map((s) => s.id)));
     }
   };
 
@@ -299,7 +346,7 @@ const Settings = () => {
                         value={newUsername}
                         onChange={(e) => setNewUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
                         className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
-                        placeholder="username baru"
+                        placeholder="new username"
                       />
                       <Button
                         onClick={handleSaveUsername}
@@ -351,7 +398,7 @@ const Settings = () => {
                         value={newDisplayName}
                         onChange={(e) => setNewDisplayName(e.target.value)}
                         className="flex-1 rounded-md border border-border bg-transparent px-3 py-1.5 text-sm focus:border-foreground focus:outline-none transition-colors"
-                        placeholder="display name baru"
+                        placeholder="new display name"
                         maxLength={50}
                       />
                       <Button
@@ -450,7 +497,7 @@ const Settings = () => {
                   <p className="py-12 text-center text-sm text-muted-foreground">loading...</p>
                 ) : !bookmarkedStories?.length ? (
                   <p className="py-12 text-center text-sm text-muted-foreground">
-                    belum ada bookmark. coba simpan artikel yang kamu suka! ✿
+                    no bookmarks yet. save articles you like! ✿
                   </p>
                 ) : (
                   bookmarkedStories.map((story) => (
@@ -463,19 +510,34 @@ const Settings = () => {
             {/* Backup PDF Tab */}
             <TabsContent value="backup" className="mt-6">
               <h2 className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4" /> Backup Artikel ke PDF
+                <FileText className="h-4 w-4" /> Backup Articles to PDF
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Pilih artikel yang ingin kamu backup, lalu download sebagai PDF.
+                Select articles to backup, then download as PDF.
               </p>
 
               {!stories?.length ? (
-                <p className="mt-6 text-sm text-muted-foreground">belum ada artikel yang dipublish.</p>
+                <p className="mt-6 text-sm text-muted-foreground">no published articles yet.</p>
               ) : (
                 <>
-                  <div className="mt-4 flex items-center justify-between">
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
+                      <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                      <select
+                        value={dateFilter}
+                        onChange={(e) => { setDateFilter(e.target.value); setSelected(new Set()); }}
+                        className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none focus:border-foreground transition-colors"
+                      >
+                        {dateOptions.map((o) => (
+                          <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between">
                     <button onClick={toggleAll} className="text-xs text-muted-foreground hover:text-foreground">
-                      {selected.size === stories.length ? "Deselect all" : "Select all"}
+                      {selected.size === filteredStories.length ? "Deselect all" : "Select all"}
                     </button>
                     <Button
                       onClick={handleExport}
@@ -488,23 +550,27 @@ const Settings = () => {
                   </div>
 
                   <div className="mt-3 divide-y divide-border rounded-md border border-border">
-                    {stories.map((s) => (
-                      <label
-                        key={s.id}
-                        className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted/50"
-                      >
-                        <Checkbox
-                          checked={selected.has(s.id)}
-                          onCheckedChange={() => toggle(s.id)}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate text-sm font-medium">{s.title || "Untitled"}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {s.published_at ? new Date(s.published_at).toLocaleDateString() : ""}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
+                    {filteredStories.length === 0 ? (
+                      <p className="px-4 py-8 text-center text-sm text-muted-foreground">no articles in this period</p>
+                    ) : (
+                      filteredStories.map((s) => (
+                        <label
+                          key={s.id}
+                          className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted/50"
+                        >
+                          <Checkbox
+                            checked={selected.has(s.id)}
+                            onCheckedChange={() => toggle(s.id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-sm font-medium">{s.title || "Untitled"}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {s.published_at ? new Date(s.published_at).toLocaleDateString() : ""}
+                            </p>
+                          </div>
+                        </label>
+                      ))
+                    )}
                   </div>
                 </>
               )}
