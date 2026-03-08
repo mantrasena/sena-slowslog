@@ -290,6 +290,19 @@ const Admin = () => {
 
             {/* Stories & Backup Tab (merged) */}
             <TabsContent value="stories" className="mt-4">
+              {/* Search */}
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={storySearch}
+                    onChange={(e) => setStorySearch(e.target.value)}
+                    placeholder="Search by title or author..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
               {/* Filters row */}
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select
