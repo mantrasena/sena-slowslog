@@ -1,24 +1,27 @@
-import { Search, User } from "lucide-react";
+import { Search, User, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger } from
-"@/components/ui/dropdown-menu";
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { PenLine, LogOut, Shield } from "lucide-react";
+import { PenLine, LogOut, Shield, BadgeCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import SearchDialog from "@/components/SearchDialog";
-
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { useInnerCircleEnabled } from "@/hooks/useInnerCircle";
 
 const Header = () => {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { user, profile, isFounder } = useAuth();
+  const { user, profile, isFounder, roles } = useAuth();
+  const isInnerCircle = roles.includes("inner_circle");
+  const { data: innerCircleEnabled } = useInnerCircleEnabled();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -35,13 +38,13 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSearchOpen(!searchOpen)}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground">
-            
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+          >
             <Search className="h-4 w-4" />
           </button>
 
-          {user ?
-          <DropdownMenu>
+          {user ? (
+            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center justify-center rounded-full">
                   <Avatar className="h-8 w-8">
@@ -52,37 +55,57 @@ const Header = () => {
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem onClick={() => navigate("/write")} className="gap-2 cursor-pointer">
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate("/write")} className="gap-2.5 cursor-pointer py-2.5">
                   <PenLine className="h-4 w-4" /> Write
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate(`/profile/${profile?.username}`)} className="gap-2 cursor-pointer">
-                  <User className="h-4 w-4" /> Profile
-                </DropdownMenuItem>
-                {isFounder &&
-              <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2 cursor-pointer">
-                    <Shield className="h-4 w-4" /> Admin
-                  </DropdownMenuItem>
-              }
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="gap-2 cursor-pointer text-muted-foreground">
+                <DropdownMenuItem onClick={() => navigate(`/profile/${profile?.username}`)} className="gap-2.5 cursor-pointer py-2.5">
+                  <User className="h-4 w-4" /> Profile
+                  {isInnerCircle && (
+                    <BadgeCheck className="ml-auto h-4 w-4 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")} className="gap-2.5 cursor-pointer py-2.5">
+                  <Settings className="h-4 w-4" /> Setting
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/inner-circle")}
+                  className="gap-2.5 cursor-pointer py-2.5"
+                  disabled={!innerCircleEnabled && !isInnerCircle}
+                >
+                  <BadgeCheck className={`h-4 w-4 ${innerCircleEnabled || isInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : "text-muted-foreground"}`} />
+                  <span className={innerCircleEnabled || isInnerCircle ? "text-[hsl(45,70%,40%)]" : ""}>
+                    Support & Join Inner Circle
+                  </span>
+                </DropdownMenuItem>
+                {isFounder && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2.5 cursor-pointer py-2.5">
+                      <Shield className="h-4 w-4" /> Admin
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="gap-2.5 cursor-pointer py-2.5 text-muted-foreground">
                   <LogOut className="h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu> :
-
-          <Link
-            to="/auth"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-            
+            </DropdownMenu>
+          ) : (
+            <Link
+              to="/auth"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
               log in
             </Link>
-          }
+          )}
         </div>
       </div>
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-    </header>);
-
+    </header>
+  );
 };
 
 export default Header;
