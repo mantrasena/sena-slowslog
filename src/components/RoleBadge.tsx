@@ -14,6 +14,11 @@ const roleConfig: Record<Role, { icon: typeof Crown; colors: string; iconColor: 
     colors: "bg-[hsl(38,80%,92%)] text-[hsl(38,70%,30%)] border-[hsl(38,70%,75%)]",
     iconColor: "text-[hsl(38,80%,45%)]",
   },
+  admin: {
+    icon: ShieldCheck,
+    colors: "bg-[hsl(260,50%,92%)] text-[hsl(260,50%,30%)] border-[hsl(260,45%,75%)]",
+    iconColor: "text-[hsl(260,50%,45%)]",
+  },
   early_adopter: {
     icon: Star,
     colors: "bg-[hsl(140,50%,90%)] text-[hsl(140,50%,28%)] border-[hsl(140,45%,72%)]",
