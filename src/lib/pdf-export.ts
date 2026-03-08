@@ -35,7 +35,7 @@ const parseHtmlToBlocks = (html: string): TextBlock[] => {
   const blocks: TextBlock[] = [];
 
   const getText = (el: Element): string =>
-    (el.textContent || "").replace(/\s+/g, " ").trim();
+    (el.textContent || "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
 
   const walk = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
