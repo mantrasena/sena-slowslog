@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { BadgeCheck, Check, Sparkles, Upload, Loader2 } from "lucide-react";
+import { BadgeCheck, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { compressImage } from "@/lib/image-compress";
 
 const plans = [
   {
