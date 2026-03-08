@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
 import Header from "@/components/Header";
@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
+import { compressImage } from "@/lib/image-compress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3 } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
@@ -100,6 +102,8 @@ const Settings = () => {
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
@@ -298,6 +302,56 @@ const Settings = () => {
     setSelected(next);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const compressed = await compressImage(file);
+      const filePath = `${user.id}/avatar.webp`;
+      // Remove old avatar first
+      await supabase.storage.from("avatars").remove([filePath]);
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, compressed, { contentType: "image/webp", upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      const avatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: avatarUrl })
+        .eq("user_id", user.id);
+      if (updateError) throw updateError;
+      toast.success("Profile photo updated (◕‿◕)");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      queryClient.invalidateQueries({ queryKey: ["profile-full"] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+    setUploadingAvatar(true);
+    try {
+      await supabase.storage.from("avatars").remove([`${user.id}/avatar.webp`]);
+      await supabase.from("profiles").update({ avatar_url: null }).eq("user_id", user.id);
+      toast.success("Profile photo removed");
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch {
+      toast.error("Failed to remove photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleExport = () => {
     if (!selected.size || !stories) return;
     const toExport = stories.filter((s) => selected.has(s.id)).map((s) => ({
@@ -340,6 +394,52 @@ const Settings = () => {
             {/* Profile Tab */}
             <TabsContent value="profile" className="mt-6">
               <div className="space-y-6">
+                {/* Avatar Upload */}
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name} />
+                      <AvatarFallback className="text-lg font-medium text-muted-foreground">
+                        {profile?.display_name?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/40 text-background opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </button>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{profile?.display_name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40"
+                      >
+                        {uploadingAvatar ? "uploading..." : "change photo"}
+                      </button>
+                      {profile?.avatar_url && (
+                        <button
+                          onClick={handleRemoveAvatar}
+                          disabled={uploadingAvatar}
+                          className="text-xs text-destructive/70 hover:text-destructive disabled:opacity-40"
+                        >
+                          remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Username</label>
                   {editingUsername ? (
