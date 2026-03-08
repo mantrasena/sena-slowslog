@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Write from "./pages/Write";
 import StoryDetail from "./pages/StoryDetail";
-import Drafts from "./pages/Drafts";
+
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
