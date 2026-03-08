@@ -37,7 +37,7 @@ const StoryCard = ({ story, showPinned }: StoryCardProps) => {
             >
               {story.author.display_name}
             </Link>
-            <RoleBadge role={story.author.role} />
+            <RoleBadge role={story.author.role} variant="card" />
             <span>·</span>
           </>
         )}

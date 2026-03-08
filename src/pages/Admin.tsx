@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Trash2, Download, ChevronDown, ChevronRight } from "lucide-react";
+import RoleBadge from "@/components/RoleBadge";
+import { Trash2, Download, ChevronDown, ChevronRight, Search, Users, FileText } from "lucide-react";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
@@ -31,6 +32,7 @@ interface StoryRow {
   content: string | null;
   subtitle: string | null;
   author_name: string;
+  author_username: string;
 }
 
 const Admin = () => {
@@ -38,6 +40,8 @@ const Admin = () => {
   const { isFounder, loading } = useAuth();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
@@ -77,7 +81,7 @@ const Admin = () => {
     if (!storiesData) return setStories([]);
     const userIds = [...new Set(storiesData.map((s) => s.user_id))];
     const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
-    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p.display_name]));
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
     setStories(
       storiesData.map((s: any) => ({
         id: s.id,
@@ -88,10 +92,24 @@ const Admin = () => {
         is_draft: s.is_draft,
         published_at: s.published_at,
         views: s.views,
-        author_name: profileMap.get(s.user_id) || "unknown",
+        author_name: profileMap.get(s.user_id)?.display_name || "unknown",
+        author_username: profileMap.get(s.user_id)?.username || "unknown",
       }))
     );
   };
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return users;
+    const q = userSearch.toLowerCase();
+    return users.filter(
+      (u) => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)
+    );
+  }, [users, userSearch]);
+
+  const filteredStories = useMemo(() => {
+    if (storyUserFilter === "all") return stories;
+    return stories.filter((s) => s.user_id === storyUserFilter);
+  }, [stories, storyUserFilter]);
 
   const changeRole = async (userId: string, newRole: Role) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
@@ -113,11 +131,8 @@ const Admin = () => {
       const toExport = stories
         .filter((s) => selectedUsers.has(s.user_id) && !s.is_draft)
         .map((s) => ({
-          title: s.title,
-          subtitle: s.subtitle,
-          content: s.content,
-          published_at: s.published_at,
-          author_name: s.author_name,
+          title: s.title, subtitle: s.subtitle, content: s.content,
+          published_at: s.published_at, author_name: s.author_name,
         }));
       if (!toExport.length) return toast.error("no published articles found");
       exportArticlesToPDF(toExport, "admin-backup");
@@ -127,11 +142,8 @@ const Admin = () => {
       const toExport = stories
         .filter((s) => selectedStories.has(s.id))
         .map((s) => ({
-          title: s.title,
-          subtitle: s.subtitle,
-          content: s.content,
-          published_at: s.published_at,
-          author_name: s.author_name,
+          title: s.title, subtitle: s.subtitle, content: s.content,
+          published_at: s.published_at, author_name: s.author_name,
         }));
       exportArticlesToPDF(toExport, "admin-backup-selected");
       toast.success(`exported ${toExport.length} article(s)`);
@@ -140,19 +152,28 @@ const Admin = () => {
 
   const toggleUser = (uid: string) => {
     const next = new Set(selectedUsers);
-    if (next.has(uid)) next.delete(uid);
-    else next.add(uid);
+    if (next.has(uid)) next.delete(uid); else next.add(uid);
     setSelectedUsers(next);
   };
 
   const toggleStorySelect = (id: string) => {
     const next = new Set(selectedStories);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     setSelectedStories(next);
   };
 
   const userStories = (uid: string) => stories.filter((s) => s.user_id === uid && !s.is_draft);
+
+  // Get unique authors for dropdown
+  const storyAuthors = useMemo(() => {
+    const map = new Map<string, { user_id: string; name: string; username: string }>();
+    stories.forEach((s) => {
+      if (!map.has(s.user_id)) {
+        map.set(s.user_id, { user_id: s.user_id, name: s.author_name, username: s.author_username });
+      }
+    });
+    return Array.from(map.values());
+  }, [stories]);
 
   if (loading) return null;
 
@@ -167,23 +188,49 @@ const Admin = () => {
           <Tabs defaultValue="users" className="mt-8">
             <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0">
               <TabsTrigger value="users" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-                Users ({users.length})
+                <Users className="h-3.5 w-3.5 mr-1.5" /> Users ({users.length})
               </TabsTrigger>
               <TabsTrigger value="stories" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-                Stories ({stories.length})
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Stories ({stories.length})
               </TabsTrigger>
               <TabsTrigger value="backup" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
-                Backup PDF
+                <Download className="h-3.5 w-3.5 mr-1.5" /> Backup
               </TabsTrigger>
             </TabsList>
 
+            {/* Users Tab */}
             <TabsContent value="users" className="mt-4">
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Search by username or display name..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
+                </div>
+                {userSearch && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {filteredUsers.length} result(s)
+                  </p>
+                )}
+              </div>
               <div className="divide-y divide-border">
-                {users.map((u) => (
+                {filteredUsers.map((u) => (
                   <div key={u.user_id} className="flex items-center justify-between py-3">
-                    <div>
-                      <p className="text-sm font-medium">{u.display_name}</p>
-                      <p className="text-xs text-muted-foreground">@{u.username}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                        {u.display_name[0]}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{u.display_name}</p>
+                          <RoleBadge role={u.role} variant="card" />
+                        </div>
+                        <p className="text-xs text-muted-foreground">@{u.username}</p>
+                      </div>
                     </div>
                     <select
                       value={u.role}
@@ -196,27 +243,49 @@ const Admin = () => {
                     </select>
                   </div>
                 ))}
+                {filteredUsers.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">no users found (◕︿◕)</p>
+                )}
               </div>
             </TabsContent>
 
+            {/* Stories Tab */}
             <TabsContent value="stories" className="mt-4">
+              <div className="mb-4">
+                <select
+                  value={storyUserFilter}
+                  onChange={(e) => setStoryUserFilter(e.target.value)}
+                  className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm focus:outline-none focus:border-foreground transition-colors"
+                >
+                  <option value="all">All users ({stories.length} stories)</option>
+                  {storyAuthors.map((a) => (
+                    <option key={a.user_id} value={a.user_id}>
+                      {a.name} (@{a.username}) — {stories.filter((s) => s.user_id === a.user_id).length} stories
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="divide-y divide-border">
-                {stories.map((s) => (
+                {filteredStories.map((s) => (
                   <div key={s.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <p className="text-sm font-medium">{s.title || "untitled"}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
                       <p className="text-xs text-muted-foreground">
-                        by {s.author_name} · {s.is_draft ? "draft" : "published"} · {s.views} views
+                        by {s.author_name} (@{s.author_username}) · {s.is_draft ? "draft" : "published"} · {s.views} views
                       </p>
                     </div>
-                    <button onClick={() => deleteStory(s.id)} className="text-muted-foreground hover:text-destructive">
+                    <button onClick={() => deleteStory(s.id)} className="ml-3 flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
+                {filteredStories.length === 0 && (
+                  <p className="py-8 text-center text-sm text-muted-foreground">no stories found</p>
+                )}
               </div>
             </TabsContent>
 
+            {/* Backup Tab */}
             <TabsContent value="backup" className="mt-4">
               <div className="space-y-4">
                 <div className="flex items-center gap-3">

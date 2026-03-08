@@ -4,12 +4,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import RoleBadge from "@/components/RoleBadge";
+import AchievementList from "@/components/AchievementList";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings } from "lucide-react";
+import { FileText, Settings, Award } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/lib/types";
+import type { UserStats } from "@/lib/achievements";
 
 const Profile = () => {
   const { username } = useParams();
@@ -49,6 +51,37 @@ const Profile = () => {
   const pinnedStories = stories?.filter((s) => s.is_pinned) || [];
   const otherStories = stories?.filter((s) => !s.is_pinned) || [];
 
+  // Stats for achievements
+  const { data: achievementStats } = useQuery({
+    queryKey: ["achievement-stats", profileData?.user_id],
+    enabled: !!profileData?.user_id,
+    queryFn: async () => {
+      const userId = profileData!.user_id;
+
+      // Total views
+      const { data: viewStories } = await supabase
+        .from("stories")
+        .select("views")
+        .eq("user_id", userId)
+        .eq("is_draft", false);
+      const totalViews = (viewStories || []).reduce((sum, s) => sum + (s.views || 0), 0);
+
+      // Bookmark count
+      const bookmarkCount = await supabase
+        .from("bookmarks")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+
+      return {
+        storyCount: profileData!.storyCount,
+        totalViews,
+        bookmarkCount: bookmarkCount.count || 0,
+        hasBio: !!(profileData?.bio && profileData.bio.trim()),
+        joinedAt: profileData!.created_at,
+      } as UserStats;
+    },
+  });
+
   const isOwnProfile = user && profileData && user.id === profileData.user_id;
 
   if (!profileData) {
@@ -74,7 +107,7 @@ const Profile = () => {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-xl font-medium">{profileData.display_name}</h1>
-                <RoleBadge role={profileData.role} />
+                <RoleBadge role={profileData.role} variant="profile" />
               </div>
               <p className="text-xs text-muted-foreground">@{profileData.username}</p>
               <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
@@ -101,6 +134,9 @@ const Profile = () => {
               <TabsTrigger value="stories" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 Stories
               </TabsTrigger>
+              <TabsTrigger value="achievements" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                <Award className="h-3.5 w-3.5 mr-1.5" /> Achievements
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="stories" className="mt-2">
               <div className="divide-y divide-border">
@@ -114,6 +150,13 @@ const Profile = () => {
                   <p className="py-12 text-center text-sm text-muted-foreground">no stories yet ✍(◔◡◔)</p>
                 )}
               </div>
+            </TabsContent>
+            <TabsContent value="achievements" className="mt-4">
+              {achievementStats ? (
+                <AchievementList stats={achievementStats} />
+              ) : (
+                <p className="py-12 text-center text-sm text-muted-foreground">loading...</p>
+              )}
             </TabsContent>
           </Tabs>
         </section>
