@@ -108,6 +108,22 @@ const Settings = () => {
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
+  // Fetch IC order status
+  const { data: icOrder } = useQuery({
+    queryKey: ["ic-order-status", user?.id],
+    enabled: !!user && !isInnerCircle,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ic_orders")
+        .select("status, plan, created_at")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
     queryKey: ["my-stories-for-backup"],
