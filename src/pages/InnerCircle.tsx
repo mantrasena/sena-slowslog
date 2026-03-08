@@ -14,7 +14,7 @@ const plans = [
   {
     id: "yearly",
     name: "1 Year",
-    price: "$12",
+    price: "Rp. 99.000",
     period: "/year",
     description: "Support the platform for a year",
     benefits: [
@@ -29,7 +29,7 @@ const plans = [
   {
     id: "forever",
     name: "Forever",
-    price: "$29",
+    price: "Rp. 299.000",
     period: " one-time",
     description: "Lifetime access, forever grateful",
     popular: true,
