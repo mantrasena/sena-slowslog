@@ -52,7 +52,11 @@ const Profile = () => {
 
   const { data: stories } = useUserStories(profileData?.user_id);
   const pinnedStories = stories?.filter((s) => s.is_pinned) || [];
-  const otherStories = stories?.filter((s) => !s.is_pinned) || [];
+  const otherStories = (stories?.filter((s) => !s.is_pinned) || []).sort((a, b) => {
+    const dateA = new Date(a.published_at || a.created_at).getTime();
+    const dateB = new Date(b.published_at || b.created_at).getTime();
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+  });
 
   // Stats for achievements
   const { data: achievementStats } = useQuery({
