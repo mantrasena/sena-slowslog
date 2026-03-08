@@ -17,6 +17,7 @@ interface AuthUser {
   roles: Role[];
   loading: boolean;
   isFounder: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthUser>({
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthUser>({
   roles: [],
   loading: true,
   isFounder: false,
+  isAdmin: false,
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -86,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         roles,
         loading,
         isFounder: roles.includes("founder"),
+        isAdmin: roles.includes("admin"),
       }}
     >
       {children}

@@ -303,6 +303,7 @@ export type Database = {
         | "contributor"
         | "writer"
         | "inner_circle"
+        | "admin"
       ic_order_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
@@ -437,6 +438,7 @@ export const Constants = {
         "contributor",
         "writer",
         "inner_circle",
+        "admin",
       ],
       ic_order_status: ["pending", "approved", "rejected"],
     },

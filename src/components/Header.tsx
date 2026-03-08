@@ -19,7 +19,7 @@ import { useInnerCircleEnabled } from "@/hooks/useInnerCircle";
 const Header = () => {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { user, profile, isFounder, roles } = useAuth();
+  const { user, profile, isFounder, isAdmin, roles } = useAuth();
   const isInnerCircle = roles.includes("inner_circle");
   const { data: innerCircleEnabled } = useInnerCircleEnabled();
 
@@ -79,7 +79,7 @@ const Header = () => {
                     Support & Join Inner Circle
                   </span>
                 </DropdownMenuItem>
-                {isFounder && (
+                {(isFounder || isAdmin) && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2.5 cursor-pointer py-2.5">

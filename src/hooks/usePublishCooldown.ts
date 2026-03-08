@@ -6,11 +6,12 @@ const COOLDOWN_DAYS = 6;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 export const usePublishCooldown = () => {
-  const { user, isFounder } = useAuth();
+  const { user, isFounder, isAdmin } = useAuth();
+  const bypassCooldown = isFounder || isAdmin;
 
   return useQuery({
     queryKey: ["publish-cooldown", user?.id],
-    enabled: !!user && !isFounder,
+    enabled: !!user && !bypassCooldown,
     queryFn: async () => {
       const { data } = await supabase
         .from("stories")

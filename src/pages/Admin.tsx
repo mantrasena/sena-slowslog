@@ -104,7 +104,7 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isFounder, loading } = useAuth();
+  const { isFounder, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
@@ -146,9 +146,11 @@ const Admin = () => {
     toast.success(newValue ? "Inner Circle enabled (★‿★)" : "Inner Circle disabled");
   };
 
+  const canAccessAdmin = isFounder || isAdmin;
+
   useEffect(() => {
-    if (!loading && !isFounder) navigate("/");
-  }, [loading, isFounder]);
+    if (!loading && !canAccessAdmin) navigate("/");
+  }, [loading, canAccessAdmin]);
 
   useEffect(() => {
     fetchUsers();
@@ -367,7 +369,7 @@ const Admin = () => {
       <main className="flex-1">
         <section className="mx-auto max-w-3xl px-6 py-12">
           <h1 className="font-serif text-xl font-medium">admin dashboard</h1>
-          <p className="mt-1 text-xs text-muted-foreground">founder access only (*´▽`*)</p>
+          <p className="mt-1 text-xs text-muted-foreground">{isFounder ? "founder" : "admin"} access (*´▽`*)</p>
 
           <Tabs defaultValue="users" className="mt-8">
             <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0 overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-none">
@@ -443,9 +445,11 @@ const Admin = () => {
                         onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
                         className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
                       >
-                        {(["founder", "early_adopter", "contributor", "writer"] as Role[]).map((r) => (
-                          <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                        ))}
+                        {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
+                          .filter((r) => isFounder || r !== "founder")
+                          .map((r) => (
+                            <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                          ))}
                       </select>
                     </div>
                   </div>

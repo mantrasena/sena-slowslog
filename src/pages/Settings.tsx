@@ -93,8 +93,9 @@ const filterStoriesByDate = (stories: any[], filterValue: string) => {
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile, loading, isFounder, roles } = useAuth();
+  const { user, profile, loading, isFounder, isAdmin, roles } = useAuth();
   const isInnerCircle = roles.includes("inner_circle");
+  const hasElevated = isFounder || isAdmin;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -403,12 +404,12 @@ const Settings = () => {
               <TabsTrigger value="bookmarks" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <Bookmark className="h-3.5 w-3.5 mr-1.5" /> Bookmarks
               </TabsTrigger>
-              <TabsTrigger value="backup" disabled={!isInnerCircle && !isFounder} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
-                {!isInnerCircle && !isFounder && <Lock className="h-3 w-3 mr-1" />}
+              <TabsTrigger value="backup" disabled={!isInnerCircle && !hasElevated} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
                 <Download className="h-3.5 w-3.5 mr-1.5" /> Backup
               </TabsTrigger>
-              <TabsTrigger value="analytics" disabled={!isInnerCircle && !isFounder} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
-                {!isInnerCircle && !isFounder && <Lock className="h-3 w-3 mr-1" />}
+              <TabsTrigger value="analytics" disabled={!isInnerCircle && !hasElevated} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
                 <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Analytics
               </TabsTrigger>
             </TabsList>
@@ -583,7 +584,7 @@ const Settings = () => {
                     {saving ? "saving..." : "Save bio"}
                   </Button>
                 </div>
-                {!isFounder && <CooldownDisplay />}
+                {!hasElevated && <CooldownDisplay />}
 
                 {/* Inner Circle Status */}
                 <div className="rounded-md border border-border bg-muted/30 p-4">
