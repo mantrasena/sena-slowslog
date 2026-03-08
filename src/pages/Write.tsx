@@ -1,8 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Eye, ImageIcon } from "lucide-react";
+import { ArrowLeft, Eye, ImageIcon, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveStory, useStory } from "@/hooks/useStories";
+import { usePublishCooldown } from "@/hooks/usePublishCooldown";
+import { compressImage } from "@/lib/image-compress";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import KaomojiPicker from "@/components/KaomojiPicker";
 
@@ -10,15 +13,18 @@ const Write = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
-  const { user } = useAuth();
+  const { user, isFounder } = useAuth();
   const saveMutation = useSaveStory();
   const { data: existingStory } = useStory(editId || undefined);
+  const { data: cooldown } = usePublishCooldown();
 
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
   const [wordCount, setWordCount] = useState(0);
   const [preview, setPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
@@ -43,10 +49,24 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  // Check if this is editing an already-published story (no cooldown needed for edits)
+  const isEditingPublished = !!editId && existingStory && !existingStory.is_draft;
+  const canPublish = isFounder || isEditingPublished || cooldown?.canPublish !== false;
+
+  const publishLabel = () => {
+    if (isFounder || isEditingPublished || !cooldown || cooldown.canPublish) return "publish";
+    if (cooldown.daysLeft > 0) return `${cooldown.daysLeft}d ${cooldown.hoursLeft}h`;
+    return `${cooldown.hoursLeft}h`;
+  };
+
   const handleSave = async (isDraft: boolean) => {
     const content = contentRef.current?.innerHTML || "";
     if (!title.trim()) {
       toast.error("title is required");
+      return;
+    }
+    if (!isDraft && !canPublish) {
+      toast.error(`kamu bisa publish lagi dalam ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h (◞‸◟)`);
       return;
     }
     try {
@@ -67,6 +87,47 @@ const Write = () => {
   const insertKaomoji = (k: string) => {
     contentRef.current?.focus();
     document.execCommand("insertText", false, k);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("only image files are allowed");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const compressed = await compressImage(file);
+      const ext = "webp";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+
+      const { error } = await supabase.storage
+        .from("story-images")
+        .upload(path, compressed, { contentType: "image/webp" });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("story-images")
+        .getPublicUrl(path);
+
+      contentRef.current?.focus();
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<img src="${urlData.publicUrl}" alt="story image" style="max-width:100%;border-radius:8px;margin:1rem 0" />`
+      );
+      updateWordCount();
+      toast.success("image uploaded (◕‿◕)");
+    } catch (err: any) {
+      toast.error(err.message || "upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const readTime = Math.max(1, Math.ceil(wordCount / 200));
@@ -124,10 +185,11 @@ const Write = () => {
             </button>
             <button
               onClick={() => handleSave(false)}
-              disabled={saveMutation.isPending}
-              className="rounded-md bg-foreground px-3 py-1 text-xs text-background hover:opacity-90"
+              disabled={saveMutation.isPending || !canPublish}
+              className="rounded-md bg-foreground px-3 py-1 text-xs text-background hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!canPublish ? `kamu bisa publish lagi dalam ${cooldown?.daysLeft}d ${cooldown?.hoursLeft}h` : ""}
             >
-              publish
+              {publishLabel()}
             </button>
           </div>
         </div>
@@ -159,6 +221,22 @@ const Write = () => {
           <KaomojiPicker onSelect={insertKaomoji}>
             <button className="h-7 rounded px-2 text-[10px] hover:text-foreground">(◕‿◕)</button>
           </KaomojiPicker>
+          <div className="h-4 w-px bg-border" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="h-7 w-7 rounded hover:text-foreground flex items-center justify-center"
+            title="Insert image"
+          >
+            {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
         </div>
 
         <div
