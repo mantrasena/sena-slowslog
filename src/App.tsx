@@ -7,7 +7,7 @@ import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Write from "./pages/Write";
 import StoryDetail from "./pages/StoryDetail";
-import Drafts from "./pages/Drafts";
+
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
@@ -29,7 +29,7 @@ const App = () => (
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/write" element={<Write />} />
             <Route path="/story/:id" element={<StoryDetail />} />
-            <Route path="/drafts" element={<Drafts />} />
+            
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
