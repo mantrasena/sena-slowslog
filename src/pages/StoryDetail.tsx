@@ -147,9 +147,9 @@ const StoryDetail = () => {
             <div className="my-8 h-px w-12 bg-border" />
 
             <div
-              className="prose prose-neutral max-w-none leading-relaxed"
+              className="prose prose-neutral max-w-none leading-relaxed [&_*]:!bg-transparent [&_*]:!color-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit]"
               style={{ fontSize: `${fontSize}px` }}
-              dangerouslySetInnerHTML={{ __html: story.content || "" }}
+              dangerouslySetInnerHTML={{ __html: story.content?.replace(/style="[^"]*"/gi, '') || "" }}
             />
           </article>
         </main>
