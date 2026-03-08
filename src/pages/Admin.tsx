@@ -438,7 +438,7 @@ const Admin = () => {
                           by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
                         </p>
                       </div>
-                      <button onClick={() => deleteStory(s.id)} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                      <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
