@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import RoleBadge from "@/components/RoleBadge";
 import AchievementList from "@/components/AchievementList";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
 import { FileText, Settings, Award } from "lucide-react";
