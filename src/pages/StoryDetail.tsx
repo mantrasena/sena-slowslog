@@ -33,7 +33,7 @@ const StoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: story, isLoading } = useStory(id);
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const deleteMutation = useDeleteStory();
   const pinMutation = useTogglePin();
   const visibilityMutation = useToggleVisibility();
