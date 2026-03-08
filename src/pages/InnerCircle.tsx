@@ -34,11 +34,12 @@ const plans = [
     description: "Lifetime access, forever grateful",
     popular: true,
     benefits: [
-      "Everything in 1 Year plan",
-      "Lifetime Inner Circle badge",
-      "Founding supporter recognition",
-      "All future premium features",
-      "Eternal gratitude from Mantra ♡",
+      "Verified Circle Badge on your profile & stories",
+      "Control who can read your writing with exclusive Inner Circle access",
+      "Hide your blog or stories anytime you want",
+      "Write consistently: once every three days",
+      "Access deeper user analytics",
+      "Export all your articles to PDF anytime as your personal backup",
     ],
   },
 ];
