@@ -1,6 +1,6 @@
-const MAX_WIDTH = 1200;
-const MAX_HEIGHT = 1200;
-const QUALITY = 0.7;
+const MAX_WIDTH = 1400;
+const MAX_HEIGHT = 1400;
+const QUALITY = 0.8;
 
 export const compressImage = (file: File): Promise<Blob> =>
   new Promise((resolve, reject) => {
