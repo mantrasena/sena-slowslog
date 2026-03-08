@@ -25,6 +25,7 @@ const Write = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [wordCount, setWordCount] = useState(0);
   const [preview, setPreview] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
