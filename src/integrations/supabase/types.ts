@@ -72,6 +72,42 @@ export type Database = {
           },
         ]
       }
+      ic_orders: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          email: string
+          id: string
+          plan: string
+          status: Database["public"]["Enums"]["ic_order_status"]
+          transfer_proof_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          plan: string
+          status?: Database["public"]["Enums"]["ic_order_status"]
+          transfer_proof_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          plan?: string
+          status?: Database["public"]["Enums"]["ic_order_status"]
+          transfer_proof_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -260,6 +296,7 @@ export type Database = {
         | "contributor"
         | "writer"
         | "inner_circle"
+      ic_order_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -394,6 +431,7 @@ export const Constants = {
         "writer",
         "inner_circle",
       ],
+      ic_order_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
