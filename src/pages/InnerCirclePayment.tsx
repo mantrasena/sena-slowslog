@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/image-compress";
+import qrisImage from "@/assets/qris-digital-pustaka-senarasi.png";
 
 const plans: Record<string, { name: string; price: string; period: string }> = {
   yearly: { name: "1 Year", price: "Rp. 99.000", period: "/year" },
@@ -145,20 +146,16 @@ const InnerCirclePayment = () => {
             <div className="rounded-xl border border-border bg-muted/30 p-6 text-center space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
                 <QrCode className="h-4 w-4" />
-                Transfer to
+                Scan QRIS untuk Transfer
               </div>
-              <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-lg border-2 border-dashed border-border bg-background">
-                <span className="text-xs text-muted-foreground">
-                  QR Code placeholder
-                </span>
+              <div className="mx-auto overflow-hidden rounded-lg border border-border bg-background">
+                <img
+                  src={qrisImage}
+                  alt="QRIS Digital Pustaka Senarasi"
+                  className="w-full max-w-xs mx-auto"
+                />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium">Bank / E-Wallet Name</p>
-                <p className="text-xs text-muted-foreground">a.n. Nama Pemilik Rekening</p>
-                <p className="font-mono text-sm font-medium tracking-wider">
-                  XXXX-XXXX-XXXX
-                </p>
-              </div>
+              <p className="text-sm font-medium">a.n. Digital Pustaka Senarasi</p>
             </div>
 
             {/* Upload Transfer Proof */}
