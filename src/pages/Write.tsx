@@ -30,6 +30,7 @@ const Write = () => {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
+  const currentIdRef = useRef<string | null>(editId);
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
