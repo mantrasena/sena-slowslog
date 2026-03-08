@@ -197,7 +197,7 @@ const Write = () => {
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
           <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
-            <button onClick={() => setPreview(false)} className="text-sm text-muted-foreground hover:text-foreground">
+            <button onClick={() => { setPreview(false); requestAnimationFrame(() => { if (contentRef.current) contentRef.current.innerHTML = previewHtml; }); }} className="text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft className="inline h-4 w-4" /> edit
             </button>
             <span className="text-xs text-muted-foreground">preview</span>
