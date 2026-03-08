@@ -231,7 +231,7 @@ const Write = () => {
               {autoSaveStatus === "saving" ? "saving..." : autoSaveStatus === "saved" ? "saved ✓" : `${wordCount} words · ${readTime} min`}
             </span>
             <button
-              onClick={() => setPreview(true)}
+              onClick={() => { setPreviewHtml(contentRef.current?.innerHTML || ""); setPreview(true); }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               <Eye className="inline h-3.5 w-3.5" /> preview
