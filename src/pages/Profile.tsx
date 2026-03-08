@@ -18,6 +18,7 @@ import type { UserStats } from "@/lib/achievements";
 const Profile = () => {
   const { username } = useParams();
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", username],
