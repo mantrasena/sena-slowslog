@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
+import { Eye, EyeOff } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +45,17 @@ const Auth = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
-      <div className="w-full max-w-sm">
-        <div className="mb-10 text-center">
-          <span className="font-serif text-2xl font-medium tracking-tight text-primary">Sena (◕ᴗ◕✿)</span>
-          <p className="text-sm text-muted-foreground">
-            {isLogin ? "welcome back (◕‿◕)" : "join the slow blog (◕‿◕)"}
+      <div className="w-full max-w-xs">
+        <div className="mb-12 text-center">
+          <h1 className="font-serif text-xl font-medium tracking-tight text-foreground">
+            {isLogin ? "welcome back" : "join sena"}
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {isLogin ? "sign in to continue (◕‿◕)" : "start your slow blog (◕‿◕)"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {!isLogin && (
             <>
               <input
@@ -61,14 +64,14 @@ const Auth = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                className="w-full border-b border-border bg-transparent py-2.5 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                className="w-full border-b border-border bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
               />
               <input
                 type="text"
-                placeholder="display name"
+                placeholder="display name (optional)"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="w-full border-b border-border bg-transparent py-2.5 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                className="w-full border-b border-border bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
               />
             </>
           )}
@@ -78,34 +81,44 @@ const Auth = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full border-b border-border bg-transparent py-2.5 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+            className="w-full border-b border-border bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
           />
-          <input
-            type="password"
-            placeholder="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full border-b border-border bg-transparent py-2.5 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full border-b border-border bg-transparent py-2 pr-8 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+            </button>
+          </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-foreground py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="mt-2 w-full border border-foreground bg-foreground py-2 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-40"
           >
-            {loading ? "..." : isLogin ? "log in" : "sign up"}
+            {loading ? "..." : isLogin ? "sign in" : "create account"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isLogin ? "don't have an account? " : "already have an account? "}
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          {isLogin ? "no account? " : "have an account? "}
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-foreground underline underline-offset-4"
+            className="text-foreground underline underline-offset-4 hover:opacity-70 transition-opacity"
           >
-            {isLogin ? "sign up" : "log in"}
+            {isLogin ? "sign up" : "sign in"}
           </button>
         </p>
       </div>
