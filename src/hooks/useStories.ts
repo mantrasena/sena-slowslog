@@ -130,7 +130,10 @@ export const useUserStories = (userId: string | undefined) =>
         .select("role")
         .eq("user_id", userId!);
 
-      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: roles || [{ role: "writer" }] }));
+      const allRoles = (roles || []).map((r) => r.role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+
+      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: [{ role: primaryRole }] }));
     },
   });
 
