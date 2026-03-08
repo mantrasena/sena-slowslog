@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -8,7 +9,7 @@ import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings, Award } from "lucide-react";
+import { FileText, Settings, Award, ArrowUpDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/lib/types";
@@ -17,6 +18,7 @@ import type { UserStats } from "@/lib/achievements";
 const Profile = () => {
   const { username } = useParams();
   const { user } = useAuth();
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", username],
@@ -50,7 +52,11 @@ const Profile = () => {
 
   const { data: stories } = useUserStories(profileData?.user_id);
   const pinnedStories = stories?.filter((s) => s.is_pinned) || [];
-  const otherStories = stories?.filter((s) => !s.is_pinned) || [];
+  const otherStories = (stories?.filter((s) => !s.is_pinned) || []).sort((a, b) => {
+    const dateA = new Date(a.published_at || a.created_at).getTime();
+    const dateB = new Date(b.published_at || b.created_at).getTime();
+    return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+  });
 
   // Stats for achievements
   const { data: achievementStats } = useQuery({
@@ -143,6 +149,17 @@ const Profile = () => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="stories" className="mt-2">
+              {stories && stories.length > 0 && (
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortOrder === "newest" ? "newest first" : "oldest first"}
+                  </button>
+                </div>
+              )}
               <div className="divide-y divide-border">
                 {pinnedStories.map((story) => (
                   <StoryCard key={story.id} story={story} showPinned />
