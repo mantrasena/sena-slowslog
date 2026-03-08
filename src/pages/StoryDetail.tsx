@@ -6,7 +6,9 @@ import { useStory, useDeleteStory, useTogglePin } from "@/hooks/useStories";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
 import { useRecordView } from "@/hooks/useRecordView";
-import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2 } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal } from "lucide-react";
+import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/useHighFives";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -26,6 +28,9 @@ const StoryDetail = () => {
   const pinMutation = useTogglePin();
   const { data: bookmarks } = useBookmarks();
   const bookmarkMutation = useToggleBookmark();
+  const { data: highFiveCount } = useHighFiveCount(id);
+  const { data: hasHighFived } = useHasHighFived(id);
+  const highFiveMutation = useToggleHighFive();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
 
@@ -151,6 +156,51 @@ const StoryDetail = () => {
               style={{ fontSize: `${fontSize}px` }}
               dangerouslySetInnerHTML={{ __html: story.content?.replace(/style="[^"]*"/gi, '') || "" }}
             />
+
+            {/* High Five */}
+            <div className="mt-12 flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          toast.error("login first to give a high five (◕‿◕)");
+                          return;
+                        }
+                        highFiveMutation.mutate({ storyId: story.id, hasHighFived: !!hasHighFived });
+                      }}
+                      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                        hasHighFived
+                          ? "border-foreground/20 bg-foreground/5 text-foreground"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                      }`}
+                    >
+                      <HandMetal className="h-3.5 w-3.5" />
+                      <span>{highFiveCount ?? 0}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Respectful Greeting</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* Divider */}
+            <div className="my-10 h-px w-full bg-border" />
+
+            {/* More from author */}
+            {story.author && (
+              <div className="pb-8">
+                <Link
+                  to={`/profile/${story.author.username}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  More from {story.author.display_name} →
+                </Link>
+              </div>
+            )}
           </article>
         </main>
       </div>
