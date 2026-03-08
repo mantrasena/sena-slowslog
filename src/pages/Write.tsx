@@ -15,7 +15,7 @@ const Write = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get("edit");
-  const { user, isFounder } = useAuth();
+  const { user, isFounder, isAdmin } = useAuth();
   const saveMutation = useSaveStory();
   const { data: existingStory } = useStory(editId || undefined);
   const { data: cooldown } = usePublishCooldown();
