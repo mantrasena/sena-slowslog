@@ -89,7 +89,7 @@ const StoryDetail = () => {
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
                       <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="gap-2 cursor-pointer text-destructive">
+                    <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive">
                       <Trash2 className="h-4 w-4" /> Delete article
                     </DropdownMenuItem>
                   </DropdownMenuContent>
