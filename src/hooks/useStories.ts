@@ -111,7 +111,12 @@ export const useUserStories = (userId: string | undefined) =>
         .eq("user_id", userId!)
         .single();
 
-      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: [{ role: "writer" }] }));
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!);
+
+      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: roles || [{ role: "writer" }] }));
     },
   });
 
