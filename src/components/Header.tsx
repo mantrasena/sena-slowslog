@@ -79,7 +79,7 @@ const Header = () => {
                     Support & Join Inner Circle
                   </span>
                 </DropdownMenuItem>
-                {isFounder && (
+                {(isFounder || isAdmin) && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => navigate("/admin")} className="gap-2.5 cursor-pointer py-2.5">
