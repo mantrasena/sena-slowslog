@@ -160,8 +160,6 @@ const InnerCircle = () => {
                     ? "Order pending"
                     : !featureEnabled
                     ? "Coming Soon"
-                    : selectedPlan === plan.id
-                    ? "Selected ✓"
                     : "Select Plan"}
                 </Button>
               </div>
