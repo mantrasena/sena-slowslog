@@ -506,7 +506,7 @@ const Admin = () => {
                             <span>{o.email}</span>
                             <span>·</span>
                             <span className="font-medium text-foreground">
-                              {o.plan === "yearly" ? "1 Year ($12)" : "Forever ($29)"}
+                              {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
                             </span>
                             <span>·</span>
                             <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>

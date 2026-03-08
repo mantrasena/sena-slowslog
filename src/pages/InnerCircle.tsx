@@ -28,7 +28,7 @@ const plans = [
   },
   {
     id: "forever",
-    name: "Forever",
+    name: "Lifetime",
     price: "Rp. 299.000",
     period: " one-time",
     description: "Lifetime access, forever grateful",
