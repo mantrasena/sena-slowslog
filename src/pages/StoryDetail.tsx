@@ -55,7 +55,7 @@ const StoryDetail = () => {
   if (!story) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted-foreground">story not found (╥﹏╥)</p></div>;
 
   const isOwner = user?.id === story.user_id;
-  const hasInnerCircleRole = auth.roles.includes("inner_circle");
+  const hasInnerCircleRole = roles.includes("inner_circle");
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
   const handleDelete = async () => {
