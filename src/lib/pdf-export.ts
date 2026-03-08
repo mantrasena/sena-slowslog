@@ -21,7 +21,9 @@ const sanitizeHtml = (html: string): string =>
     .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
     .replace(/\s*size="[^"]*"/gi, "")
     .replace(/\s*face="[^"]*"/gi, "")
-    .replace(/\s*color="[^"]*"/gi, "");
+    .replace(/\s*color="[^"]*"/gi, "")
+    // Strip inline formatting tags to ensure uniform text
+    .replace(/<\/?(b|strong|i|em|u|s|strike|del|ins|mark|small|big|sub|sup|span|a)[^>]*>/gi, "");
 
 const parseHtmlToBlocks = (html: string): TextBlock[] => {
   const div = document.createElement("div");
