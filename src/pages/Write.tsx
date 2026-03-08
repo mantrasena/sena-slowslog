@@ -51,13 +51,18 @@ const Write = () => {
     if (!user) navigate("/auth");
   }, [user]);
 
+  // Sync currentIdRef when editId changes
+  useEffect(() => {
+    if (editId) currentIdRef.current = editId;
+  }, [editId]);
+
   // Auto-save as draft every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       autoSaveDraft();
     }, AUTO_SAVE_INTERVAL);
     return () => clearInterval(interval);
-  }, [title, subtitle, editId, user]);
+  }, [autoSaveDraft]);
 
   const autoSaveDraft = useCallback(async () => {
     if (!user || !contentRef.current) return;
