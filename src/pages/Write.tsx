@@ -120,13 +120,14 @@ const Write = () => {
       return;
     }
     try {
-      await saveMutation.mutateAsync({
-        id: editId || undefined,
+      const result = await saveMutation.mutateAsync({
+        id: currentIdRef.current || editId || undefined,
         title,
         subtitle,
         content,
         is_draft: isDraft,
       });
+      if (result?.id) currentIdRef.current = result.id;
       lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
       navigate(isDraft ? "/drafts" : "/");
