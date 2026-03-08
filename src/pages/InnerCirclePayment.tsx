@@ -156,6 +156,7 @@ const InnerCirclePayment = () => {
                 />
               </div>
               <p className="text-sm font-medium">a.n. Digital Pustaka Senarasi</p>
+              <p className="text-xs text-muted-foreground">Bisa pembayaran memakai e-wallet apapun</p>
             </div>
 
             {/* Upload Transfer Proof */}
