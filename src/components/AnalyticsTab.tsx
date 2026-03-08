@@ -108,7 +108,7 @@ const AnalyticsTab = () => {
   }, [stories]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 overflow-x-hidden">
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-md border border-border p-4">
