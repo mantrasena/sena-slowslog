@@ -96,10 +96,13 @@ export const useStory = (id: string | undefined) =>
         .select("role")
         .eq("user_id", data.user_id);
 
+      const allRoles = (roles || []).map((r) => r.role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+
       // Use secure function for content
       const { data: secureContent } = await supabase.rpc("get_story_content", { p_story_id: id! });
 
-      const storyData = { ...data, content: secureContent ?? data.content, profiles: profile, user_roles: roles || [{ role: "writer" }] };
+      const storyData = { ...data, content: secureContent ?? data.content, profiles: profile, user_roles: [{ role: primaryRole }] };
       return mapStory(storyData);
     },
   });
