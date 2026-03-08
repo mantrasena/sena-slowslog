@@ -310,7 +310,9 @@ const Write = () => {
                 .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
                 .replace(/\s*size="[^"]*"/gi, "")
                 .replace(/\s*face="[^"]*"/gi, "")
-                .replace(/\s*color="[^"]*"/gi, "");
+                .replace(/\s*color="[^"]*"/gi, "")
+                .replace(/<blockquote[^>]*>/gi, "<p>")
+                .replace(/<\/blockquote>/gi, "</p>");
               document.execCommand("insertHTML", false, cleaned);
             } else {
               document.execCommand("insertText", false, text);
