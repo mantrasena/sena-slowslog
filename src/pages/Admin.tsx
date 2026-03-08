@@ -82,6 +82,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [storySearch, setStorySearch] = useState("");
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
@@ -154,8 +155,17 @@ const Admin = () => {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
     result = filterByDate(result, dateFilter);
+    if (storySearch.trim()) {
+      const q = storySearch.toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          s.author_name.toLowerCase().includes(q) ||
+          s.author_username.toLowerCase().includes(q)
+      );
+    }
     return result;
-  }, [stories, storyUserFilter, dateFilter]);
+  }, [stories, storyUserFilter, dateFilter, storySearch]);
 
   const changeRole = async (userId: string, newRole: Role) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
@@ -280,6 +290,19 @@ const Admin = () => {
 
             {/* Stories & Backup Tab (merged) */}
             <TabsContent value="stories" className="mt-4">
+              {/* Search */}
+              <div className="mb-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={storySearch}
+                    onChange={(e) => setStorySearch(e.target.value)}
+                    placeholder="Search by title or author..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
+                </div>
+              </div>
               {/* Filters row */}
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select

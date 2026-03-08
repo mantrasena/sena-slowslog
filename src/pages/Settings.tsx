@@ -10,10 +10,11 @@ import { exportArticlesToPDF } from "@/lib/pdf-export";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
+import AnalyticsTab from "@/components/AnalyticsTab";
 
 const CooldownDisplay = () => {
   const { data: cooldown, isLoading } = usePublishCooldown();
@@ -331,6 +332,9 @@ const Settings = () => {
               <TabsTrigger value="backup" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <Download className="h-3.5 w-3.5 mr-1.5" /> Backup
               </TabsTrigger>
+              <TabsTrigger value="analytics" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Analytics
+              </TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
@@ -574,6 +578,11 @@ const Settings = () => {
                   </div>
                 </>
               )}
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="mt-6">
+              <AnalyticsTab />
             </TabsContent>
           </Tabs>
         </section>
