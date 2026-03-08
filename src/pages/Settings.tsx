@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera, BadgeCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
@@ -91,7 +91,8 @@ const filterStoriesByDate = (stories: any[], filterValue: string) => {
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile, loading, isFounder } = useAuth();
+  const { user, profile, loading, isFounder, roles } = useAuth();
+  const isInnerCircle = roles.includes("inner_circle");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -106,6 +107,22 @@ const Settings = () => {
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
+
+  // Fetch IC order status
+  const { data: icOrder } = useQuery({
+    queryKey: ["ic-order-status", user?.id],
+    enabled: !!user && !isInnerCircle,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("ic_orders")
+        .select("status, plan, created_at")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   // Fetch published stories for PDF backup
   const { data: stories } = useQuery({
@@ -383,10 +400,12 @@ const Settings = () => {
               <TabsTrigger value="bookmarks" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <Bookmark className="h-3.5 w-3.5 mr-1.5" /> Bookmarks
               </TabsTrigger>
-              <TabsTrigger value="backup" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+              <TabsTrigger value="backup" disabled={!isInnerCircle && !isFounder} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !isFounder && <Lock className="h-3 w-3 mr-1" />}
                 <Download className="h-3.5 w-3.5 mr-1.5" /> Backup
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+              <TabsTrigger value="analytics" disabled={!isInnerCircle && !isFounder} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !isFounder && <Lock className="h-3 w-3 mr-1" />}
                 <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Analytics
               </TabsTrigger>
             </TabsList>
@@ -562,6 +581,33 @@ const Settings = () => {
                   </Button>
                 </div>
                 {!isFounder && <CooldownDisplay />}
+
+                {/* Inner Circle Status */}
+                <div className="rounded-md border border-border bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <BadgeCheck className="h-4 w-4 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                    <span>Inner Circle</span>
+                  </div>
+                  {isInnerCircle ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      you're an Inner Circle member! thank you for your support (★‿★)
+                    </p>
+                  ) : icOrder?.status === "pending" ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      your order is <span className="font-medium text-[hsl(45,60%,35%)]">being reviewed</span>. we'll notify you soon! (◕ᴗ◕✿)
+                    </p>
+                  ) : icOrder?.status === "rejected" ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      your order was <span className="font-medium text-destructive">not approved</span>. you can try again on the{" "}
+                      <Link to="/inner-circle" className="underline hover:text-foreground">Inner Circle page</Link>.
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      support us & unlock exclusive features.{" "}
+                      <Link to="/inner-circle" className="underline hover:text-foreground">learn more →</Link>
+                    </p>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
