@@ -57,6 +57,8 @@ const StoryDetail = () => {
 
   const isOwner = user?.id === story.user_id;
   const hasInnerCircleRole = roles.includes("inner_circle");
+  const isInnerCircleStory = story.visibility === "inner_circle";
+  const isContentLocked = isInnerCircleStory && !isOwner && !hasInnerCircleRole;
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
   const handleDelete = async () => {
