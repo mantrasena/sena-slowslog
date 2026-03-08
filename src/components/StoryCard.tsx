@@ -49,6 +49,12 @@ const StoryCard = ({ story, showPinned }: StoryCardProps) => {
         <span className="flex items-center gap-1">
           <Eye className="h-3 w-3" /> {story.views}
         </span>
+        {story.is_hidden && (
+          <span className="flex items-center gap-1 text-muted-foreground/60">
+            <span>·</span>
+            <EyeOff className="h-3 w-3" /> hidden
+          </span>
+        )}
       </div>
     </article>
   );
