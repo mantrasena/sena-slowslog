@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera, BadgeCheck, Lock } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
