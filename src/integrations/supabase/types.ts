@@ -274,6 +274,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_story_content: { Args: { p_story_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
