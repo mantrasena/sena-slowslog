@@ -299,8 +299,25 @@ const Write = () => {
           ref={contentRef}
           contentEditable
           onInput={updateWordCount}
+          onPaste={(e) => {
+            e.preventDefault();
+            const html = e.clipboardData.getData("text/html");
+            const text = e.clipboardData.getData("text/plain");
+            if (html) {
+              // Strip all inline styles but keep structure (bold, italic, links, images)
+              const cleaned = html
+                .replace(/style="[^"]*"/gi, "")
+                .replace(/class="[^"]*"/gi, "")
+                .replace(/<font[^>]*>/gi, "")
+                .replace(/<\/font>/gi, "");
+              document.execCommand("insertHTML", false, cleaned);
+            } else {
+              document.execCommand("insertText", false, text);
+            }
+            updateWordCount();
+          }}
           data-placeholder="begin writing..."
-          className="min-h-[300px] text-base leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30"
+          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit]"
         />
       </main>
     </div>
