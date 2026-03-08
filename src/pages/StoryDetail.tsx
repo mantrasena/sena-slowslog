@@ -33,6 +33,7 @@ const StoryDetail = () => {
   const highFiveMutation = useToggleHighFive();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useRecordView(id);
 
@@ -43,8 +44,6 @@ const StoryDetail = () => {
 
   const isOwner = user?.id === story.user_id;
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
-
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(story.id);
