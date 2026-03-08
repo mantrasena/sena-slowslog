@@ -302,6 +302,13 @@ const Write = () => {
         <div
           ref={contentRef}
           contentEditable
+          suppressContentEditableWarning
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              document.execCommand("insertLineBreak");
+            }
+          }}
           onInput={updateWordCount}
           onPaste={(e) => {
             e.preventDefault();
