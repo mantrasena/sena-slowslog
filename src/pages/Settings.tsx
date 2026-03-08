@@ -584,7 +584,7 @@ const Settings = () => {
                     {saving ? "saving..." : "Save bio"}
                   </Button>
                 </div>
-                {!isFounder && <CooldownDisplay />}
+                {!hasElevated && <CooldownDisplay />}
 
                 {/* Inner Circle Status */}
                 <div className="rounded-md border border-border bg-muted/30 p-4">
