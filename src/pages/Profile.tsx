@@ -123,6 +123,7 @@ const Profile = () => {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-xl font-medium">{profileData.display_name}</h1>
+                {profileData.hasInnerCircle && <VerifiedBadge size="md" />}
                 <RoleBadge role={profileData.role} variant="profile" />
               </div>
               <p className="text-xs text-muted-foreground">@{profileData.username}</p>
