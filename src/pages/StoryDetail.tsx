@@ -45,6 +45,7 @@ const StoryDetail = () => {
   const { data: highFiveCount } = useHighFiveCount(id);
   const { data: hasHighFived } = useHasHighFived(id);
   const highFiveMutation = useToggleHighFive();
+  const { data: isInnerCircleEnabled } = useInnerCircleEnabled();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
