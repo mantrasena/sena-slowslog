@@ -91,7 +91,8 @@ const filterStoriesByDate = (stories: any[], filterValue: string) => {
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile, loading, isFounder } = useAuth();
+  const { user, profile, loading, isFounder, roles } = useAuth();
+  const isInnerCircle = roles.includes("inner_circle");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
