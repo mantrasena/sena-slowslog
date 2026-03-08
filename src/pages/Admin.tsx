@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck } from "lucide-react";
+import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle } from "lucide-react";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
@@ -46,6 +46,19 @@ interface StoryRow {
   subtitle: string | null;
   author_name: string;
   author_username: string;
+}
+
+interface ICOrder {
+  id: string;
+  user_id: string;
+  email: string;
+  plan: string;
+  transfer_proof_url: string | null;
+  status: string;
+  admin_note: string | null;
+  created_at: string;
+  username?: string;
+  display_name?: string;
 }
 
 const getDateFilterOptions = () => {
@@ -102,6 +115,12 @@ const Admin = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
 
+  // IC Orders state
+  const [orders, setOrders] = useState<ICOrder[]>([]);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
   // Inner Circle feature toggle
@@ -134,6 +153,7 @@ const Admin = () => {
   useEffect(() => {
     fetchUsers();
     fetchStories();
+    fetchOrders();
   }, []);
 
   const fetchUsers = async () => {
@@ -192,6 +212,26 @@ const Admin = () => {
     );
   };
 
+  const fetchOrders = async () => {
+    const { data: ordersData } = await supabase
+      .from("ic_orders")
+      .select("*")
+      .order("created_at", { ascending: false }) as any;
+    if (!ordersData) return setOrders([]);
+
+    const userIds = [...new Set((ordersData as any[]).map((o: any) => o.user_id))];
+    const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
+    const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
+
+    setOrders(
+      (ordersData as any[]).map((o: any) => ({
+        ...o,
+        username: profileMap.get(o.user_id)?.username || "unknown",
+        display_name: profileMap.get(o.user_id)?.display_name || "unknown",
+      }))
+    );
+  };
+
   const filteredUsers = useMemo(() => {
     if (!userSearch.trim()) return users;
     const q = userSearch.toLowerCase();
@@ -218,9 +258,26 @@ const Admin = () => {
     return result;
   }, [stories, storyUserFilter, dateFilter, storySearch]);
 
+  const filteredOrders = useMemo(() => {
+    let result = orders;
+    if (orderStatusFilter !== "all") {
+      result = result.filter((o) => o.status === orderStatusFilter);
+    }
+    if (orderSearch.trim()) {
+      const q = orderSearch.toLowerCase();
+      result = result.filter(
+        (o) =>
+          o.email.toLowerCase().includes(q) ||
+          (o.username || "").toLowerCase().includes(q) ||
+          (o.display_name || "").toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [orders, orderStatusFilter, orderSearch]);
+
+  const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
+
   const changeRole = async (userId: string, newRole: Role) => {
-    // Keep inner_circle role if they have it, just change primary role
-    const user = users.find((u) => u.user_id === userId);
     await supabase.from("user_roles").delete().eq("user_id", userId).neq("role", "inner_circle");
     await supabase.from("user_roles").insert({ user_id: userId, role: newRole });
     toast.success("role updated (◕‿◕)");
@@ -245,6 +302,25 @@ const Admin = () => {
     setDeleteStoryTarget(null);
     fetchStories();
     qc.invalidateQueries({ queryKey: ["stories"] });
+  };
+
+  const approveOrder = async (order: ICOrder) => {
+    // Update order status
+    await supabase.from("ic_orders").update({ status: "approved", updated_at: new Date().toISOString() } as any).eq("id", order.id);
+    // Grant IC role
+    const { data: existingRole } = await supabase.from("user_roles").select("*").eq("user_id", order.user_id).eq("role", "inner_circle");
+    if (!existingRole?.length) {
+      await supabase.from("user_roles").insert({ user_id: order.user_id, role: "inner_circle" as any });
+    }
+    toast.success(`Order approved & IC granted to @${order.username} (★‿★)`);
+    fetchOrders();
+    fetchUsers();
+  };
+
+  const rejectOrder = async (order: ICOrder) => {
+    await supabase.from("ic_orders").update({ status: "rejected", updated_at: new Date().toISOString() } as any).eq("id", order.id);
+    toast.success("Order rejected");
+    fetchOrders();
   };
 
   const storyAuthors = useMemo(() => {
@@ -297,6 +373,14 @@ const Admin = () => {
             <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0">
               <TabsTrigger value="users" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <Users className="h-3.5 w-3.5 mr-1.5" /> Users ({users.length})
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                <ShoppingBag className="h-3.5 w-3.5 mr-1.5" /> IC Orders
+                {pendingCount > 0 && (
+                  <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(45,90%,50%)] px-1 text-[10px] font-bold text-white">
+                    {pendingCount}
+                  </span>
+                )}
               </TabsTrigger>
               <TabsTrigger value="stories" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Stories & Backup
@@ -368,6 +452,97 @@ const Admin = () => {
                 ))}
                 {filteredUsers.length === 0 && (
                   <p className="py-8 text-center text-sm text-muted-foreground">no users found (◕︿◕)</p>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* IC Orders Tab */}
+            <TabsContent value="orders" className="mt-4">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={orderSearch}
+                    onChange={(e) => setOrderSearch(e.target.value)}
+                    placeholder="Search by email or username..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
+                </div>
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="rounded-md border border-border bg-transparent px-3 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
+                >
+                  <option value="all">All status ({orders.length})</option>
+                  <option value="pending">Pending ({orders.filter((o) => o.status === "pending").length})</option>
+                  <option value="approved">Approved ({orders.filter((o) => o.status === "approved").length})</option>
+                  <option value="rejected">Rejected ({orders.filter((o) => o.status === "rejected").length})</option>
+                </select>
+              </div>
+
+              <div className="divide-y divide-border rounded-md border border-border">
+                {filteredOrders.length === 0 ? (
+                  <p className="px-4 py-8 text-center text-sm text-muted-foreground">no orders yet (◕ᴗ◕✿)</p>
+                ) : (
+                  filteredOrders.map((o) => (
+                    <div key={o.id} className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium">{o.display_name}</p>
+                            <span className="text-xs text-muted-foreground">@{o.username}</span>
+                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              o.status === "pending"
+                                ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                : o.status === "approved"
+                                ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
+                                : "bg-destructive/10 text-destructive"
+                            }`}>
+                              {o.status}
+                            </span>
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span>{o.email}</span>
+                            <span>·</span>
+                            <span className="font-medium text-foreground">
+                              {o.plan === "yearly" ? "1 Year ($12)" : "Forever ($29)"}
+                            </span>
+                            <span>·</span>
+                            <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {o.transfer_proof_url && (
+                            <button
+                              onClick={() => setProofPreview(o.transfer_proof_url)}
+                              className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+                              title="View proof"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          {o.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => approveOrder(o)}
+                                className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                              >
+                                <CheckCircle2 className="h-3 w-3" /> Approve
+                              </button>
+                              <button
+                                onClick={() => rejectOrder(o)}
+                                className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                              >
+                                <XCircle className="h-3 w-3" /> Reject
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </TabsContent>
@@ -475,6 +650,7 @@ const Admin = () => {
         </section>
       </main>
 
+      {/* Delete Story Dialog */}
       <AlertDialog open={!!deleteStoryTarget} onOpenChange={(open) => !open && setDeleteStoryTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -488,6 +664,21 @@ const Admin = () => {
             <AlertDialogAction onClick={deleteStory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Yes, delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Proof Preview Dialog */}
+      <AlertDialog open={!!proofPreview} onOpenChange={(open) => !open && setProofPreview(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Transfer Proof</AlertDialogTitle>
+          </AlertDialogHeader>
+          {proofPreview && (
+            <img src={proofPreview} alt="Transfer proof" className="w-full rounded-lg border border-border" />
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>Close</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
