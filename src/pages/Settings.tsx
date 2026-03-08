@@ -394,6 +394,52 @@ const Settings = () => {
             {/* Profile Tab */}
             <TabsContent value="profile" className="mt-6">
               <div className="space-y-6">
+                {/* Avatar Upload */}
+                <div className="flex items-center gap-4">
+                  <div className="relative group">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name} />
+                      <AvatarFallback className="text-lg font-medium text-muted-foreground">
+                        {profile?.display_name?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      onClick={() => avatarInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/40 text-background opacity-0 group-hover:opacity-100 transition-opacity disabled:cursor-not-allowed"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </button>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{profile?.display_name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <button
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-40"
+                      >
+                        {uploadingAvatar ? "uploading..." : "change photo"}
+                      </button>
+                      {profile?.avatar_url && (
+                        <button
+                          onClick={handleRemoveAvatar}
+                          disabled={uploadingAvatar}
+                          className="text-xs text-destructive/70 hover:text-destructive disabled:opacity-40"
+                        >
+                          remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Username</label>
                   {editingUsername ? (
