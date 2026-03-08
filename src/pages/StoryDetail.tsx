@@ -199,32 +199,24 @@ const StoryDetail = () => {
 
             {isContentLocked ? (
               <div className="relative">
-                <div
-                  className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground"
-                  style={{ fontSize: `${fontSize}px` }}
-                >
-                  <p>{story.content || ""}</p>
-                </div>
-                <div
-                  className="absolute inset-0 top-16"
-                  style={{
-                    backdropFilter: "blur(8px)",
-                    WebkitBackdropFilter: "blur(8px)",
-                    background: "linear-gradient(to bottom, transparent 0%, hsl(var(--background) / 0.6) 20%, hsl(var(--background) / 0.95) 60%)",
-                  }}
-                />
-                <div className="relative z-10 -mt-8 flex flex-col items-center justify-center py-16 text-center">
+                <div className="flex flex-col items-center justify-center py-16 text-center">
                   <VerifiedBadge size="md" className="mb-3" />
                   <p className="font-serif text-lg font-medium">Inner Circle Only</p>
                   <p className="mt-1 text-sm text-muted-foreground max-w-xs">
                     This story is exclusive to Inner Circle members. Join to read the full content.
                   </p>
-                  <Link
-                    to="/inner-circle"
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[hsl(45,90%,50%)] px-4 py-2 text-xs font-medium text-[hsl(45,90%,50%)] transition-colors hover:bg-[hsl(45,90%,50%)]/10"
-                  >
-                    <Lock className="h-3 w-3" /> Join Inner Circle
-                  </Link>
+                  {isInnerCircleEnabled ? (
+                    <Link
+                      to="/inner-circle"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[hsl(45,90%,50%)] px-4 py-2 text-xs font-medium text-[hsl(45,90%,50%)] transition-colors hover:bg-[hsl(45,90%,50%)]/10"
+                    >
+                      <Lock className="h-3 w-3" /> Join Inner Circle
+                    </Link>
+                  ) : (
+                    <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-muted px-4 py-2 text-xs font-medium text-muted-foreground cursor-not-allowed opacity-50">
+                      <Lock className="h-3 w-3" /> Currently Unavailable
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
