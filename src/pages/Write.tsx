@@ -56,14 +56,6 @@ const Write = () => {
     if (editId) currentIdRef.current = editId;
   }, [editId]);
 
-  // Auto-save as draft every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      autoSaveDraft();
-    }, AUTO_SAVE_INTERVAL);
-    return () => clearInterval(interval);
-  }, [autoSaveDraft]);
-
   const autoSaveDraft = useCallback(async () => {
     if (!user || !contentRef.current) return;
     const content = contentRef.current.innerHTML || "";
@@ -84,7 +76,6 @@ const Write = () => {
       // Track the saved ID so subsequent auto-saves update instead of insert
       if (result?.id && !currentIdRef.current) {
         currentIdRef.current = result.id;
-        // Update URL without navigation so edit continues seamlessly
         window.history.replaceState(null, "", `/write?edit=${result.id}`);
       }
       lastSavedRef.current = current;
@@ -94,6 +85,14 @@ const Write = () => {
       setAutoSaveStatus("idle");
     }
   }, [title, subtitle, user, saveMutation]);
+
+  // Auto-save as draft every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSaveDraft();
+    }, AUTO_SAVE_INTERVAL);
+    return () => clearInterval(interval);
+  }, [autoSaveDraft]);
 
   const updateWordCount = useCallback(() => {
     const text = contentRef.current?.innerText || "";
