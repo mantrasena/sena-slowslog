@@ -93,7 +93,7 @@ const parseHtmlToBlocks = (html: string): TextBlock[] => {
           for (const part of parts) {
             const tmp = document.createElement("span");
             tmp.innerHTML = part;
-            const t = (tmp.textContent || "").trim();
+            const t = (tmp.textContent || "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
             if (t) {
               blocks.push({ text: t, type: "paragraph" });
             } else {
