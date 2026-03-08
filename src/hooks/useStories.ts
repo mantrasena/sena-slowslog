@@ -87,7 +87,11 @@ export const useStory = (id: string | undefined) =>
         .select("role")
         .eq("user_id", data.user_id);
 
-      return mapStory({ ...data, profiles: profile, user_roles: roles || [{ role: "writer" }] });
+      // Use secure function for content
+      const { data: secureContent } = await supabase.rpc("get_story_content", { p_story_id: id! });
+
+      const storyData = { ...data, content: secureContent ?? data.content, profiles: profile, user_roles: roles || [{ role: "writer" }] };
+      return mapStory(storyData);
     },
   });
 

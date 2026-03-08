@@ -6,7 +6,8 @@ import { useStory, useDeleteStory, useTogglePin, useToggleVisibility, useToggleH
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
 import { useRecordView } from "@/hooks/useRecordView";
-import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, EyeOff, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal, Globe, BadgeCheck } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, EyeOff, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal, Globe, BadgeCheck, Lock } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/useHighFives";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
