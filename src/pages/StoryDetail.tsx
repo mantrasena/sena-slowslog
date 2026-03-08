@@ -226,7 +226,7 @@ const StoryDetail = () => {
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+              <AlertDialogTitle>Delete this story?</AlertDialogTitle>
               <AlertDialogDescription>
                 This action cannot be undone. This will permanently delete "{story.title}".
               </AlertDialogDescription>

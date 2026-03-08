@@ -128,6 +128,15 @@ export const useSaveStory = () => {
       if (!user) throw new Error("Not authenticated");
 
       if (story.id) {
+        // Check if this story was already published — preserve original date
+        const { data: existing } = await supabase
+          .from("stories")
+          .select("published_at, is_draft")
+          .eq("id", story.id)
+          .single();
+
+        const wasPublished = existing && !existing.is_draft && existing.published_at;
+
         const { data, error } = await supabase
           .from("stories")
           .update({
@@ -135,7 +144,7 @@ export const useSaveStory = () => {
             subtitle: story.subtitle,
             content: story.content,
             is_draft: story.is_draft,
-            published_at: story.is_draft ? null : new Date().toISOString(),
+            published_at: story.is_draft ? null : (wasPublished ? existing.published_at : new Date().toISOString()),
           })
           .eq("id", story.id)
           .select()
