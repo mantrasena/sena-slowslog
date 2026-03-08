@@ -18,11 +18,12 @@ const plans = [
     period: "/year",
     description: "Support the platform for a year",
     benefits: [
-      "Verified Inner Circle badge",
-      "Early access to new features",
-      "Priority support from the team",
-      "Exclusive Inner Circle community",
-      "Support independent slow writing",
+      "Verified Circle Badge on your profile & stories",
+      "Control who can read your writing with exclusive Inner Circle access",
+      "Hide your blog or stories anytime you want",
+      "Write consistently: once every three days",
+      "Access deeper user analytics",
+      "Export all your articles to PDF anytime as your personal backup",
     ],
   },
   {
