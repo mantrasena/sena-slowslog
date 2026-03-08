@@ -108,11 +108,12 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  const bypassCooldown = isFounder || isAdmin;
   const isEditingPublished = !!editId && existingStory && !existingStory.is_draft;
-  const canPublish = isFounder || isEditingPublished || cooldown?.canPublish !== false;
+  const canPublish = bypassCooldown || isEditingPublished || cooldown?.canPublish !== false;
 
   const publishLabel = () => {
-    if (isFounder || isEditingPublished || !cooldown || cooldown.canPublish) return "publish";
+    if (bypassCooldown || isEditingPublished || !cooldown || cooldown.canPublish) return "publish";
     if (cooldown.daysLeft > 0) return `${cooldown.daysLeft}d ${cooldown.hoursLeft}h`;
     return `${cooldown.hoursLeft}h`;
   };
