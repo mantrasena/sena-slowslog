@@ -203,14 +203,6 @@ const Settings = () => {
     },
   });
 
-  if (loading) return null;
-  if (!user) {
-    navigate("/auth");
-    return null;
-  }
-
-  const currentBio = bio ?? profile?.bio ?? "";
-
   // Fetch username_changed_at
   const { data: profileFull } = useQuery({
     queryKey: ["profile-full", user?.id],
@@ -224,6 +216,14 @@ const Settings = () => {
       return data;
     },
   });
+
+  if (loading) return null;
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
+
+  const currentBio = bio ?? profile?.bio ?? "";
 
   const canChange = (field: 'username' | 'display_name') => {
     const changedAt = field === 'username' ? profileFull?.username_changed_at : profileFull?.display_name_changed_at;
