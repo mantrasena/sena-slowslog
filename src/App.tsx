@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Bookmarks from "./pages/Bookmarks";
 import InnerCircle from "./pages/InnerCircle";
+import InnerCirclePayment from "./pages/InnerCirclePayment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/inner-circle" element={<InnerCircle />} />
+            <Route path="/inner-circle/payment" element={<InnerCirclePayment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
