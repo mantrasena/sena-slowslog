@@ -44,6 +44,8 @@ const StoryDetail = () => {
   const isOwner = user?.id === story.user_id;
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(story.id);
     toast.success("deleted (T_T)");
