@@ -14,9 +14,18 @@ interface TextBlock {
   level?: number; // heading level
 }
 
+const sanitizeHtml = (html: string): string =>
+  html
+    .replace(/style="[^"]*"/gi, "")
+    .replace(/class="[^"]*"/gi, "")
+    .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
+    .replace(/\s*size="[^"]*"/gi, "")
+    .replace(/\s*face="[^"]*"/gi, "")
+    .replace(/\s*color="[^"]*"/gi, "");
+
 const parseHtmlToBlocks = (html: string): TextBlock[] => {
   const div = document.createElement("div");
-  div.innerHTML = html;
+  div.innerHTML = sanitizeHtml(html);
   const blocks: TextBlock[] = [];
 
   const getText = (el: Element): string =>
