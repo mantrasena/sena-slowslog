@@ -104,7 +104,7 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isFounder, loading } = useAuth();
+  const { isFounder, isAdmin, loading } = useAuth();
   const qc = useQueryClient();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
