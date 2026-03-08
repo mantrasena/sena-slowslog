@@ -149,6 +149,17 @@ const Profile = () => {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="stories" className="mt-2">
+              {stories && stories.length > 0 && (
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={() => setSortOrder(sortOrder === "newest" ? "oldest" : "newest")}
+                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <ArrowUpDown className="h-3 w-3" />
+                    {sortOrder === "newest" ? "newest first" : "oldest first"}
+                  </button>
+                </div>
+              )}
               <div className="divide-y divide-border">
                 {pinnedStories.map((story) => (
                   <StoryCard key={story.id} story={story} showPinned />
