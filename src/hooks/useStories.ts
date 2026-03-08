@@ -4,6 +4,7 @@ import type { Story, Role } from "@/lib/types";
 
 const mapStory = (row: any): Story => ({
   ...row,
+  visibility: (row.visibility || "public") as Story["visibility"],
   author: row.profiles
     ? {
         id: row.profiles.id,
