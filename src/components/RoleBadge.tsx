@@ -1,28 +1,64 @@
-import { Role, ROLE_LABELS, ROLE_KAOMOJI } from "@/lib/types";
+import { Role, ROLE_LABELS } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Crown, Star, Leaf } from "lucide-react";
 
 interface RoleBadgeProps {
   role: Role;
+  variant?: "card" | "profile";
   className?: string;
 }
 
-const roleStyles: Record<Role, string> = {
-  founder: "bg-accent/15 text-accent-foreground border-accent/30",
-  early_adopter: "bg-badge-early/15 text-foreground border-badge-early/30",
-  contributor: "bg-badge-contributor/15 text-foreground border-badge-contributor/30",
-  writer: "bg-muted text-muted-foreground border-border",
+const roleConfig: Record<Role, { icon: typeof Crown; colors: string; iconColor: string }> = {
+  founder: {
+    icon: Crown,
+    colors: "bg-[hsl(38,80%,92%)] text-[hsl(38,70%,30%)] border-[hsl(38,70%,75%)]",
+    iconColor: "text-[hsl(38,80%,45%)]",
+  },
+  early_adopter: {
+    icon: Star,
+    colors: "bg-[hsl(140,50%,90%)] text-[hsl(140,50%,28%)] border-[hsl(140,45%,72%)]",
+    iconColor: "text-[hsl(140,50%,38%)]",
+  },
+  contributor: {
+    icon: Star,
+    colors: "bg-[hsl(140,50%,85%)] text-[hsl(140,50%,25%)] border-[hsl(140,45%,65%)]",
+    iconColor: "text-[hsl(140,50%,35%)]",
+  },
+  writer: {
+    icon: Leaf,
+    colors: "bg-[hsl(220,50%,92%)] text-[hsl(220,50%,30%)] border-[hsl(220,45%,75%)]",
+    iconColor: "text-[hsl(220,50%,45%)]",
+  },
 };
 
-const RoleBadge = ({ role, className }: RoleBadgeProps) => {
+const RoleBadge = ({ role, variant = "card", className }: RoleBadgeProps) => {
+  const config = roleConfig[role];
+  const Icon = config.icon;
+
+  if (variant === "card") {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-medium",
+          config.colors,
+          className
+        )}
+      >
+        <Icon className={cn("h-2.5 w-2.5", config.iconColor)} />
+      </span>
+    );
+  }
+
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium",
-        roleStyles[role],
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium",
+        config.colors,
         className
       )}
     >
-      {ROLE_KAOMOJI[role]} {ROLE_LABELS[role]}
+      <Icon className={cn("h-3.5 w-3.5", config.iconColor)} />
+      {ROLE_LABELS[role]}
     </span>
   );
 };
