@@ -108,10 +108,26 @@ const StoryDetail = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
-                      <Pencil className="h-4 w-4" /> Edit story
+                      <Pencil className="h-4 w-4" /> Edit article
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
                       <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
+                    </DropdownMenuItem>
+                    {hasInnerCircleRole && (
+                      <DropdownMenuItem onClick={handleToggleVisibility} className="gap-2 cursor-pointer">
+                        {story.visibility === "inner_circle" ? (
+                          <><Globe className="h-4 w-4" /> <span>Make Public</span></>
+                        ) : (
+                          <><BadgeCheck className="h-4 w-4 text-[hsl(45,90%,50%)]" /> <span className="text-[hsl(45,90%,50%)]">Only My Circle</span></>
+                        )}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleToggleHidden} className="gap-2 cursor-pointer">
+                      {story.is_hidden ? (
+                        <><Eye className="h-4 w-4" /> Show Blog</>
+                      ) : (
+                        <><EyeOff className="h-4 w-4" /> Hide Blog</>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive">
                       <Trash2 className="h-4 w-4" /> Delete story
