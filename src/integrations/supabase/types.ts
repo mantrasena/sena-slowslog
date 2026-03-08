@@ -156,6 +156,7 @@ export type Database = {
       story_views: {
         Row: {
           created_at: string
+          device_type: string | null
           id: string
           story_id: string
           viewer_id: string | null
@@ -163,6 +164,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          device_type?: string | null
           id?: string
           story_id: string
           viewer_id?: string | null
@@ -170,6 +172,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          device_type?: string | null
           id?: string
           story_id?: string
           viewer_id?: string | null
@@ -215,10 +218,19 @@ export type Database = {
         }
         Returns: boolean
       }
-      record_story_view: {
-        Args: { p_story_id: string; p_viewer_id: string }
-        Returns: undefined
-      }
+      record_story_view:
+        | {
+            Args: { p_story_id: string; p_viewer_id: string }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_device_type?: string
+              p_story_id: string
+              p_viewer_id: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       app_role: "founder" | "early_adopter" | "contributor" | "writer"
