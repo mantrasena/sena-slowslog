@@ -38,7 +38,8 @@ const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     }
 
     const timeout = setTimeout(async () => {
-      const term = `%${query}%`;
+      const cleanQuery = query.startsWith("@") ? query.slice(1) : query;
+      const term = `%${cleanQuery}%`;
 
       const [storiesRes, usersRes] = await Promise.all([
         supabase
