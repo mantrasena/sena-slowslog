@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -6,22 +6,34 @@ import { useMyDrafts, useDeleteStory } from "@/hooks/useStories";
 import { useAuth } from "@/hooks/useAuth";
 import { FileText, PenLine, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Drafts = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: drafts, isLoading } = useMyDrafts();
   const deleteMutation = useDeleteStory();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     if (!user) navigate("/auth");
   }, [user]);
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`delete "${title || "untitled"}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteTarget.id);
       toast.success("draft deleted (◕‿◕)");
+      setDeleteTarget(null);
     } catch {
       toast.error("failed to delete draft");
     }
@@ -56,7 +68,7 @@ const Drafts = () => {
                       <PenLine className="h-3 w-3" /> edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(draft.id, draft.title)}
+                      onClick={() => setDeleteTarget({ id: draft.id, title: draft.title })}
                       disabled={deleteMutation.isPending}
                       className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive"
                     >
@@ -70,6 +82,23 @@ const Drafts = () => {
         </section>
       </main>
       <Footer />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete "{deleteTarget?.title || "untitled"}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

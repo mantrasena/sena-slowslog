@@ -15,6 +15,16 @@ import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserRow {
   user_id: string;
@@ -90,6 +100,7 @@ const Admin = () => {
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
+  const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
@@ -227,9 +238,11 @@ const Admin = () => {
     fetchUsers();
   };
 
-  const deleteStory = async (id: string) => {
-    await supabase.from("stories").delete().eq("id", id);
+  const deleteStory = async () => {
+    if (!deleteStoryTarget) return;
+    await supabase.from("stories").delete().eq("id", deleteStoryTarget.id);
     toast.success("story deleted");
+    setDeleteStoryTarget(null);
     fetchStories();
     qc.invalidateQueries({ queryKey: ["stories"] });
   };
@@ -425,7 +438,7 @@ const Admin = () => {
                           by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
                         </p>
                       </div>
-                      <button onClick={() => deleteStory(s.id)} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                      <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -461,6 +474,23 @@ const Admin = () => {
           </Tabs>
         </section>
       </main>
+
+      <AlertDialog open={!!deleteStoryTarget} onOpenChange={(open) => !open && setDeleteStoryTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this story?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete "{deleteStoryTarget?.title || "untitled"}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, keep it</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteStory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

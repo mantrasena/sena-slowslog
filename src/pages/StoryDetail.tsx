@@ -18,6 +18,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const StoryDetail = () => {
   const { id } = useParams();
@@ -33,6 +43,7 @@ const StoryDetail = () => {
   const highFiveMutation = useToggleHighFive();
   const [fontSize, setFontSize] = useState(18);
   const [darkReading, setDarkReading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useRecordView(id);
 
@@ -88,7 +99,7 @@ const StoryDetail = () => {
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
                       <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDelete} className="gap-2 cursor-pointer text-destructive">
+                    <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive">
                       <Trash2 className="h-4 w-4" /> Delete article
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -203,6 +214,23 @@ const StoryDetail = () => {
             )}
           </article>
         </main>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete this article?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete "{story.title}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>No, keep it</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Yes, delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
