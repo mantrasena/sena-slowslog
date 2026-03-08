@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Header from "@/components/Header";
@@ -8,7 +9,7 @@ import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings, Award } from "lucide-react";
+import { FileText, Settings, Award, ArrowUpDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/lib/types";
