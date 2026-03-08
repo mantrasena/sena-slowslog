@@ -6,7 +6,9 @@ import { useStory, useDeleteStory, useTogglePin } from "@/hooks/useStories";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
 import { useRecordView } from "@/hooks/useRecordView";
-import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2 } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal } from "lucide-react";
+import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/useHighFives";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
