@@ -378,7 +378,7 @@ const Settings = () => {
       content: s.content,
       published_at: s.published_at,
     }));
-    exportArticlesToPDF(toExport, "my-articles-backup");
+    exportArticlesToPDF(toExport);
     toast.success(`exported ${toExport.length} article(s) (◕‿◕)`);
   };
 

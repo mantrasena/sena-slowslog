@@ -355,7 +355,7 @@ const Admin = () => {
         title: s.title, subtitle: s.subtitle, content: s.content,
         published_at: s.published_at, author_name: s.author_name,
       }));
-    exportArticlesToPDF(toExport, "admin-backup");
+    exportArticlesToPDF(toExport);
     toast.success(`exported ${toExport.length} article(s)`);
   };
 
