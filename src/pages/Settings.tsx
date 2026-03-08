@@ -613,6 +613,86 @@ const Settings = () => {
               </div>
             </TabsContent>
 
+            {/* Drafts Tab */}
+            <TabsContent value="drafts" className="mt-6">
+              {/* Warning banner */}
+              <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-border bg-muted/50 px-4 py-3">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Drafts are automatically deleted after <span className="font-medium text-foreground">14 days</span> of no edits. Edit or publish your drafts to keep them.
+                </p>
+              </div>
+              <div className="divide-y divide-border">
+                {draftsLoading ? (
+                  <p className="py-12 text-center text-sm text-muted-foreground">loading...</p>
+                ) : !drafts?.length ? (
+                  <p className="py-12 text-center text-sm text-muted-foreground">no drafts yet (◡‿◡)</p>
+                ) : (
+                  drafts.map((draft) => {
+                    const daysLeft = Math.max(0, 14 - differenceInDays(new Date(), new Date(draft.updated_at)));
+                    const isUrgent = daysLeft <= 3;
+
+                    return (
+                      <div key={draft.id} className="flex items-center justify-between py-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{draft.title || "untitled"}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              {draft.subtitle && <p className="truncate text-xs text-muted-foreground">{draft.subtitle}</p>}
+                              <span className={`flex items-center gap-1 text-[10px] shrink-0 ${isUrgent ? "text-destructive" : "text-muted-foreground"}`}>
+                                <Clock className="h-2.5 w-2.5" />
+                                {daysLeft === 0 ? "expires today" : `${daysLeft}d left`}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                          <Link
+                            to={`/write?edit=${draft.id}`}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            <PenLine className="h-3 w-3" /> edit
+                          </Link>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button className="flex items-center gap-1.5 text-xs text-destructive/60 hover:text-destructive">
+                                <Trash2 className="h-3 w-3" /> delete
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete draft?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  "{draft.title || "untitled"}" will be permanently deleted. This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={async () => {
+                                    const { error } = await supabase.from("stories").delete().eq("id", draft.id);
+                                    if (error) {
+                                      toast.error("Failed to delete draft");
+                                    } else {
+                                      toast.success("Draft deleted (◕‿◕)");
+                                      queryClient.invalidateQueries({ queryKey: ["my-drafts"] });
+                                    }
+                                  }}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </TabsContent>
 
             {/* Bookmarks Tab */}
             <TabsContent value="bookmarks" className="mt-6">
