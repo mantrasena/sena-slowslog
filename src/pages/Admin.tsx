@@ -155,8 +155,17 @@ const Admin = () => {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
     result = filterByDate(result, dateFilter);
+    if (storySearch.trim()) {
+      const q = storySearch.toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.title.toLowerCase().includes(q) ||
+          s.author_name.toLowerCase().includes(q) ||
+          s.author_username.toLowerCase().includes(q)
+      );
+    }
     return result;
-  }, [stories, storyUserFilter, dateFilter]);
+  }, [stories, storyUserFilter, dateFilter, storySearch]);
 
   const changeRole = async (userId: string, newRole: Role) => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
