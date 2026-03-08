@@ -4,8 +4,6 @@ import VerifiedBadge from "./VerifiedBadge";
 import { Eye, Pin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface StoryCardProps {
   story: Story;
@@ -14,21 +12,7 @@ interface StoryCardProps {
 
 const StoryCard = ({ story, showPinned }: StoryCardProps) => {
   const date = story.published_at ? format(new Date(story.published_at), "MMM d") : "";
-
-  // Check if author has inner_circle role
-  const { data: isInnerCircle } = useQuery({
-    queryKey: ["user-inner-circle", story.author?.user_id],
-    enabled: !!story.author?.user_id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", story.author!.user_id)
-        .eq("role", "inner_circle");
-      return (data?.length || 0) > 0;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  const isInnerCircleOnly = story.visibility === "inner_circle";
 
   return (
     <article className="py-8">
@@ -55,7 +39,7 @@ const StoryCard = ({ story, showPinned }: StoryCardProps) => {
             >
               {story.author.display_name}
             </Link>
-            {isInnerCircle && <VerifiedBadge size="sm" />}
+            {isInnerCircleOnly && <VerifiedBadge size="sm" />}
             <RoleBadge role={story.author.role} variant="card" />
             <span>·</span>
           </>

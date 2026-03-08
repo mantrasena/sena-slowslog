@@ -43,6 +43,7 @@ const Bookmarks = () => {
         const p = profileMap.get(s.user_id);
         return {
           ...s,
+          visibility: (s.visibility || "public") as Story["visibility"],
           author: p ? {
             id: p.id,
             user_id: p.user_id,

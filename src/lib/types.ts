@@ -18,6 +18,8 @@ export interface Story {
   content: string | null;
   is_draft: boolean;
   is_pinned: boolean;
+  is_hidden: boolean;
+  visibility: "public" | "inner_circle";
   views: number;
   published_at: string | null;
   created_at: string;

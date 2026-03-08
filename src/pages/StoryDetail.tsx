@@ -2,11 +2,11 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import Header from "@/components/Header";
 import RoleBadge from "@/components/RoleBadge";
-import { useStory, useDeleteStory, useTogglePin } from "@/hooks/useStories";
+import { useStory, useDeleteStory, useTogglePin, useToggleVisibility, useToggleHidden } from "@/hooks/useStories";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookmarks, useToggleBookmark } from "@/hooks/useBookmarks";
 import { useRecordView } from "@/hooks/useRecordView";
-import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal } from "lucide-react";
+import { ArrowLeft, Bookmark, BookmarkCheck, MoreHorizontal, Eye, EyeOff, Minus, Plus, Sun, Moon, Pencil, Pin, Trash2, HandMetal, Globe, BadgeCheck } from "lucide-react";
 import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/useHighFives";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
@@ -33,9 +33,11 @@ const StoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: story, isLoading } = useStory(id);
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const deleteMutation = useDeleteStory();
   const pinMutation = useTogglePin();
+  const visibilityMutation = useToggleVisibility();
+  const hiddenMutation = useToggleHidden();
   const { data: bookmarks } = useBookmarks();
   const bookmarkMutation = useToggleBookmark();
   const { data: highFiveCount } = useHighFiveCount(id);
@@ -53,6 +55,7 @@ const StoryDetail = () => {
   if (!story) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted-foreground">story not found (╥﹏╥)</p></div>;
 
   const isOwner = user?.id === story.user_id;
+  const hasInnerCircleRole = roles.includes("inner_circle");
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
   const handleDelete = async () => {
@@ -64,6 +67,17 @@ const StoryDetail = () => {
   const handlePin = async () => {
     await pinMutation.mutateAsync({ id: story.id, pinned: !story.is_pinned });
     toast.success(story.is_pinned ? "unpinned" : "pinned (◕‿◕)");
+  };
+
+  const handleToggleVisibility = async () => {
+    const newVis = story.visibility === "public" ? "inner_circle" : "public";
+    await visibilityMutation.mutateAsync({ id: story.id, visibility: newVis });
+    toast.success(newVis === "inner_circle" ? "set to Inner Circle only (★‿★)" : "set to public (◕‿◕)");
+  };
+
+  const handleToggleHidden = async () => {
+    await hiddenMutation.mutateAsync({ id: story.id, is_hidden: !story.is_hidden });
+    toast.success(story.is_hidden ? "story is now visible" : "story is now hidden");
   };
 
   return (
@@ -94,10 +108,26 @@ const StoryDetail = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
-                      <Pencil className="h-4 w-4" /> Edit story
+                      <Pencil className="h-4 w-4" /> Edit article
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
                       <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
+                    </DropdownMenuItem>
+                    {hasInnerCircleRole && (
+                      <DropdownMenuItem onClick={handleToggleVisibility} className="gap-2 cursor-pointer">
+                        {story.visibility === "inner_circle" ? (
+                          <><Globe className="h-4 w-4" /> <span>Make Public</span></>
+                        ) : (
+                          <><BadgeCheck className="h-4 w-4 text-[hsl(45,90%,50%)]" /> <span className="text-[hsl(45,90%,50%)]">Only My Circle</span></>
+                        )}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={handleToggleHidden} className="gap-2 cursor-pointer">
+                      {story.is_hidden ? (
+                        <><Eye className="h-4 w-4" /> Show Blog</>
+                      ) : (
+                        <><EyeOff className="h-4 w-4" /> Hide Blog</>
+                      )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive">
                       <Trash2 className="h-4 w-4" /> Delete story

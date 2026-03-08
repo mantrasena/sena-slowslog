@@ -174,6 +174,7 @@ export type Database = {
           created_at: string
           id: string
           is_draft: boolean
+          is_hidden: boolean
           is_pinned: boolean
           published_at: string | null
           subtitle: string | null
@@ -181,12 +182,14 @@ export type Database = {
           updated_at: string
           user_id: string
           views: number
+          visibility: string
         }
         Insert: {
           content?: string | null
           created_at?: string
           id?: string
           is_draft?: boolean
+          is_hidden?: boolean
           is_pinned?: boolean
           published_at?: string | null
           subtitle?: string | null
@@ -194,12 +197,14 @@ export type Database = {
           updated_at?: string
           user_id: string
           views?: number
+          visibility?: string
         }
         Update: {
           content?: string | null
           created_at?: string
           id?: string
           is_draft?: boolean
+          is_hidden?: boolean
           is_pinned?: boolean
           published_at?: string | null
           subtitle?: string | null
@@ -207,6 +212,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           views?: number
+          visibility?: string
         }
         Relationships: []
       }
