@@ -35,6 +35,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/inner-circle" element={<InnerCircle />} />
+            <Route path="/inner-circle/payment" element={<InnerCirclePayment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
