@@ -209,7 +209,7 @@ const Write = () => {
           <div className="my-6 h-px w-12 bg-border" />
           <div
             className="prose prose-neutral max-w-none text-lg leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: contentRef.current?.innerHTML || "" }}
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
       </div>
