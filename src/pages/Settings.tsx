@@ -18,7 +18,7 @@ import type { Story } from "@/lib/types";
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, isFounder } = useAuth();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bio, setBio] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
