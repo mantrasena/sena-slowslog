@@ -102,6 +102,8 @@ const Settings = () => {
   const [editingDisplayName, setEditingDisplayName] = useState(false);
   const [savingDisplayName, setSavingDisplayName] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
