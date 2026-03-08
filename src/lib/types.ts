@@ -38,6 +38,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 export const ROLE_KAOMOJI: Record<Role, string> = {
   founder: "(*´▽`*)",
+  admin: "(⌐■_■)",
   early_adopter: "(◕‿◕)",
   contributor: "(｡◕‿◕｡)",
   writer: "(￣▽￣)",
