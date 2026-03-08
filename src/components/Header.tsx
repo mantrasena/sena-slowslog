@@ -19,7 +19,7 @@ import { useInnerCircleEnabled } from "@/hooks/useInnerCircle";
 const Header = () => {
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { user, profile, isFounder, roles } = useAuth();
+  const { user, profile, isFounder, isAdmin, roles } = useAuth();
   const isInnerCircle = roles.includes("inner_circle");
   const { data: innerCircleEnabled } = useInnerCircleEnabled();
 
