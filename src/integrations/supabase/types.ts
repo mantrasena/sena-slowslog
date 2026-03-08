@@ -111,6 +111,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       stories: {
         Row: {
           content: string | null
@@ -233,7 +254,12 @@ export type Database = {
           }
     }
     Enums: {
-      app_role: "founder" | "early_adopter" | "contributor" | "writer"
+      app_role:
+        | "founder"
+        | "early_adopter"
+        | "contributor"
+        | "writer"
+        | "inner_circle"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -361,7 +387,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["founder", "early_adopter", "contributor", "writer"],
+      app_role: [
+        "founder",
+        "early_adopter",
+        "contributor",
+        "writer",
+        "inner_circle",
+      ],
     },
   },
 } as const

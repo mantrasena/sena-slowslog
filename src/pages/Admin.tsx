@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
-import { Trash2, Download, Search, Users, FileText, Filter } from "lucide-react";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck } from "lucide-react";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
@@ -20,6 +22,7 @@ interface UserRow {
   display_name: string;
   created_at: string;
   role: Role;
+  hasInnerCircle: boolean;
 }
 
 interface StoryRow {
@@ -60,7 +63,7 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
     const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
     return stories.filter((s) => {
-      const d = new Date(s.published_at || s.published_at || "");
+      const d = new Date(s.published_at || "");
       return d >= start && d <= end;
     });
   }
@@ -79,6 +82,7 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
 const Admin = () => {
   const navigate = useNavigate();
   const { isFounder, loading } = useAuth();
+  const qc = useQueryClient();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
   const [userSearch, setUserSearch] = useState("");
@@ -86,9 +90,31 @@ const Admin = () => {
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
-  const qc = useQueryClient();
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
+
+  // Inner Circle feature toggle
+  const { data: innerCircleEnabled, refetch: refetchSetting } = useQuery({
+    queryKey: ["site-settings", "inner_circle_enabled"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "inner_circle_enabled")
+        .single();
+      return (data?.value as any)?.enabled ?? false;
+    },
+  });
+
+  const toggleInnerCircleFeature = async () => {
+    const newValue = !innerCircleEnabled;
+    await supabase
+      .from("site_settings")
+      .update({ value: { enabled: newValue }, updated_at: new Date().toISOString() })
+      .eq("key", "inner_circle_enabled");
+    refetchSetting();
+    toast.success(newValue ? "Inner Circle enabled (★‿★)" : "Inner Circle disabled");
+  };
 
   useEffect(() => {
     if (!loading && !isFounder) navigate("/");
@@ -104,14 +130,28 @@ const Admin = () => {
     if (!profiles) return;
     const userIds = profiles.map((p) => p.user_id);
     const { data: roles } = await supabase.from("user_roles").select("*").in("user_id", userIds);
+
+    const rolesByUser = new Map<string, string[]>();
+    (roles || []).forEach((r) => {
+      const existing = rolesByUser.get(r.user_id) || [];
+      existing.push(r.role);
+      rolesByUser.set(r.user_id, existing);
+    });
+
     setUsers(
-      profiles.map((p) => ({
-        user_id: p.user_id,
-        username: p.username,
-        display_name: p.display_name,
-        created_at: p.created_at,
-        role: (roles?.find((r) => r.user_id === p.user_id)?.role || "writer") as Role,
-      }))
+      profiles.map((p) => {
+        const userRoles = rolesByUser.get(p.user_id) || [];
+        const primaryRole = userRoles.find((r) => r !== "inner_circle") || "writer";
+        const hasInnerCircle = userRoles.includes("inner_circle");
+        return {
+          user_id: p.user_id,
+          username: p.username,
+          display_name: p.display_name,
+          created_at: p.created_at,
+          role: primaryRole as Role,
+          hasInnerCircle,
+        };
+      })
     );
   };
 
@@ -168,9 +208,22 @@ const Admin = () => {
   }, [stories, storyUserFilter, dateFilter, storySearch]);
 
   const changeRole = async (userId: string, newRole: Role) => {
-    await supabase.from("user_roles").delete().eq("user_id", userId);
+    // Keep inner_circle role if they have it, just change primary role
+    const user = users.find((u) => u.user_id === userId);
+    await supabase.from("user_roles").delete().eq("user_id", userId).neq("role", "inner_circle");
     await supabase.from("user_roles").insert({ user_id: userId, role: newRole });
     toast.success("role updated (◕‿◕)");
+    fetchUsers();
+  };
+
+  const toggleInnerCircle = async (userId: string, currentlyHas: boolean) => {
+    if (currentlyHas) {
+      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "inner_circle");
+      toast.success("Inner Circle removed");
+    } else {
+      await supabase.from("user_roles").insert({ user_id: userId, role: "inner_circle" as any });
+      toast.success("Inner Circle granted (★‿★)");
+    }
     fetchUsers();
   };
 
@@ -235,6 +288,9 @@ const Admin = () => {
               <TabsTrigger value="stories" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Stories & Backup
               </TabsTrigger>
+              <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
+                <Settings className="h-3.5 w-3.5 mr-1.5" /> Settings
+              </TabsTrigger>
             </TabsList>
 
             {/* Users Tab */}
@@ -258,28 +314,43 @@ const Admin = () => {
               </div>
               <div className="divide-y divide-border">
                 {filteredUsers.map((u) => (
-                  <div key={u.user_id} className="flex items-center justify-between py-3">
-                    <div className="flex items-center gap-3">
+                  <div key={u.user_id} className="flex items-center justify-between py-3 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
                         {u.display_name[0]}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium">{u.display_name}</p>
+                          <p className="text-sm font-medium truncate">{u.display_name}</p>
+                          {u.hasInnerCircle && <VerifiedBadge size="sm" />}
                           <RoleBadge role={u.role} variant="card" />
                         </div>
                         <p className="text-xs text-muted-foreground">@{u.username}</p>
                       </div>
                     </div>
-                    <select
-                      value={u.role}
-                      onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
-                      className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
-                    >
-                      {(["founder", "early_adopter", "contributor", "writer"] as Role[]).map((r) => (
-                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
+                        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
+                          u.hasInnerCircle
+                            ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                            : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
+                        }`}
+                        title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
+                      >
+                        <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
+                        {u.hasInnerCircle ? "IC" : "IC"}
+                      </button>
+                      <select
+                        value={u.role}
+                        onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
+                        className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
+                      >
+                        {(["founder", "early_adopter", "contributor", "writer"] as Role[]).map((r) => (
+                          <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 ))}
                 {filteredUsers.length === 0 && (
@@ -288,9 +359,8 @@ const Admin = () => {
               </div>
             </TabsContent>
 
-            {/* Stories & Backup Tab (merged) */}
+            {/* Stories & Backup Tab */}
             <TabsContent value="stories" className="mt-4">
-              {/* Search */}
               <div className="mb-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -303,7 +373,6 @@ const Admin = () => {
                   />
                 </div>
               </div>
-              {/* Filters row */}
               <div className="mb-4 flex flex-wrap items-center gap-3">
                 <select
                   value={storyUserFilter}
@@ -331,7 +400,6 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* Select all + Download */}
               <div className="mb-3 flex items-center justify-between">
                 <button onClick={toggleAllStories} className="text-xs text-muted-foreground hover:text-foreground">
                   {selectedStories.size === filteredStories.length && filteredStories.length > 0 ? "Deselect all" : "Select all"}
@@ -341,7 +409,6 @@ const Admin = () => {
                 </Button>
               </div>
 
-              {/* Stories list */}
               <div className="divide-y divide-border rounded-md border border-border">
                 {filteredStories.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no stories found</p>
@@ -364,6 +431,31 @@ const Admin = () => {
                     </div>
                   ))
                 )}
+              </div>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="mt-4">
+              <div className="space-y-6">
+                <div className="rounded-lg border border-border p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(45,80%,92%)]">
+                        <BadgeCheck className="h-5 w-5 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium">Support & Join Inner Circle</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {innerCircleEnabled ? "Feature is live and accessible to users" : "Feature is currently hidden from users"}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={innerCircleEnabled ?? false}
+                      onCheckedChange={toggleInnerCircleFeature}
+                    />
+                  </div>
+                </div>
               </div>
             </TabsContent>
           </Tabs>

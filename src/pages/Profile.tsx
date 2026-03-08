@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import RoleBadge from "@/components/RoleBadge";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,10 @@ const Profile = () => {
         .select("role")
         .eq("user_id", profile.user_id);
 
+      const allRoles = (roles || []).map((r) => r.role as Role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+      const hasInnerCircle = allRoles.includes("inner_circle");
+
       const storyCount = await supabase
         .from("stories")
         .select("id", { count: "exact", head: true })
@@ -44,7 +49,8 @@ const Profile = () => {
 
       return {
         ...profile,
-        role: (roles?.[0]?.role || "writer") as Role,
+        role: primaryRole as Role,
+        hasInnerCircle,
         storyCount: storyCount.count || 0,
       };
     },
@@ -117,6 +123,7 @@ const Profile = () => {
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-xl font-medium">{profileData.display_name}</h1>
+                {profileData.hasInnerCircle && <VerifiedBadge size="md" />}
                 <RoleBadge role={profileData.role} variant="profile" />
               </div>
               <p className="text-xs text-muted-foreground">@{profileData.username}</p>
