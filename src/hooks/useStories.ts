@@ -197,6 +197,35 @@ export const useTogglePin = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["stories"] });
+      qc.invalidateQueries({ queryKey: ["story"] });
+    },
+  });
+};
+
+export const useToggleVisibility = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, visibility }: { id: string; visibility: "public" | "inner_circle" }) => {
+      const { error } = await supabase.from("stories").update({ visibility }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stories"] });
+      qc.invalidateQueries({ queryKey: ["story"] });
+    },
+  });
+};
+
+export const useToggleHidden = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, is_hidden }: { id: string; is_hidden: boolean }) => {
+      const { error } = await supabase.from("stories").update({ is_hidden }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stories"] });
+      qc.invalidateQueries({ queryKey: ["story"] });
     },
   });
 };
