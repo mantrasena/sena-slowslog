@@ -39,7 +39,7 @@ const parseHtmlToBlocks = (html: string): TextBlock[] => {
 
   const walk = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
-      const t = (node.textContent || "").trim();
+      const t = (node.textContent || "").replace(/\u00A0/g, " ").replace(/\s+/g, " ").trim();
       if (t) blocks.push({ text: t, type: "paragraph" });
       return;
     }
