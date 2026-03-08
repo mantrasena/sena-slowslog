@@ -146,7 +146,7 @@ const InnerCirclePayment = () => {
             <div className="rounded-xl border border-border bg-muted/30 p-6 text-center space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
                 <QrCode className="h-4 w-4" />
-                Scan QRIS untuk Transfer
+                Scan QRIS to Pay
               </div>
               <div className="mx-auto overflow-hidden rounded-lg border border-border bg-background">
                 <img
@@ -156,7 +156,7 @@ const InnerCirclePayment = () => {
                 />
               </div>
               <p className="text-sm font-medium">a.n. Digital Pustaka Senarasi</p>
-              <p className="text-xs text-muted-foreground">Bisa pembayaran memakai e-wallet apapun</p>
+              <p className="text-xs text-muted-foreground">You can pay using any e-wallet</p>
             </div>
 
             {/* Upload Transfer Proof */}
