@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { compressImage } from "@/lib/image-compress";
+import qrisImage from "@/assets/qris-digital-pustaka-senarasi.png";
 
 const plans: Record<string, { name: string; price: string; period: string }> = {
   yearly: { name: "1 Year", price: "Rp. 99.000", period: "/year" },
