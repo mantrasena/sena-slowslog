@@ -29,7 +29,7 @@ const plans = [
   {
     id: "forever",
     name: "Forever",
-    price: "$29",
+    price: "Rp. 299.000",
     period: " one-time",
     description: "Lifetime access, forever grateful",
     popular: true,
