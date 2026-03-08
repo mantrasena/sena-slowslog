@@ -579,6 +579,33 @@ const Settings = () => {
                   </Button>
                 </div>
                 {!isFounder && <CooldownDisplay />}
+
+                {/* Inner Circle Status */}
+                <div className="rounded-md border border-border bg-muted/30 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <BadgeCheck className="h-4 w-4 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                    <span>Inner Circle</span>
+                  </div>
+                  {isInnerCircle ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      you're an Inner Circle member! thank you for your support (★‿★)
+                    </p>
+                  ) : icOrder?.status === "pending" ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      your order is <span className="font-medium text-[hsl(45,60%,35%)]">being reviewed</span>. we'll notify you soon! (◕ᴗ◕✿)
+                    </p>
+                  ) : icOrder?.status === "rejected" ? (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      your order was <span className="font-medium text-destructive">not approved</span>. you can try again on the{" "}
+                      <Link to="/inner-circle" className="underline hover:text-foreground">Inner Circle page</Link>.
+                    </p>
+                  ) : (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      support us & unlock exclusive features.{" "}
+                      <Link to="/inner-circle" className="underline hover:text-foreground">learn more →</Link>
+                    </p>
+                  )}
+                </div>
               </div>
             </TabsContent>
 
