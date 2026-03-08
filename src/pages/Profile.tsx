@@ -102,9 +102,12 @@ const Profile = () => {
       <main className="flex-1">
         <section className="mx-auto max-w-2xl px-6 py-12">
           <div className="flex items-start gap-5">
-            <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-muted text-lg font-medium text-muted-foreground">
-              {profileData.display_name[0]}
-            </div>
+            <Avatar className="h-16 w-16 flex-shrink-0">
+              <AvatarImage src={profileData.avatar_url || undefined} alt={profileData.display_name} />
+              <AvatarFallback className="text-lg font-medium text-muted-foreground">
+                {profileData.display_name[0]}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h1 className="font-serif text-xl font-medium">{profileData.display_name}</h1>

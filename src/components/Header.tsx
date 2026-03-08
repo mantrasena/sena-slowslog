@@ -43,8 +43,13 @@ const Header = () => {
           {user ?
           <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">
-                  {profile?.display_name?.[0]?.toUpperCase() || "?"}
+                <button className="flex items-center justify-center rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name} />
+                    <AvatarFallback className="text-xs font-medium text-muted-foreground">
+                      {profile?.display_name?.[0]?.toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-44">
