@@ -82,6 +82,7 @@ const Admin = () => {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [stories, setStories] = useState<StoryRow[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [storySearch, setStorySearch] = useState("");
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
