@@ -55,6 +55,7 @@ const StoryDetail = () => {
   if (!story) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted-foreground">story not found (╥﹏╥)</p></div>;
 
   const isOwner = user?.id === story.user_id;
+  const hasInnerCircleRole = auth.roles.includes("inner_circle");
   const date = story.published_at ? format(new Date(story.published_at), "MMM d, yyyy") : "";
 
   const handleDelete = async () => {
@@ -66,6 +67,17 @@ const StoryDetail = () => {
   const handlePin = async () => {
     await pinMutation.mutateAsync({ id: story.id, pinned: !story.is_pinned });
     toast.success(story.is_pinned ? "unpinned" : "pinned (◕‿◕)");
+  };
+
+  const handleToggleVisibility = async () => {
+    const newVis = story.visibility === "public" ? "inner_circle" : "public";
+    await visibilityMutation.mutateAsync({ id: story.id, visibility: newVis });
+    toast.success(newVis === "inner_circle" ? "set to Inner Circle only (★‿★)" : "set to public (◕‿◕)");
+  };
+
+  const handleToggleHidden = async () => {
+    await hiddenMutation.mutateAsync({ id: story.id, is_hidden: !story.is_hidden });
+    toast.success(story.is_hidden ? "story is now visible" : "story is now hidden");
   };
 
   return (
