@@ -579,6 +579,11 @@ const Settings = () => {
                 </>
               )}
             </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="mt-6">
+              <AnalyticsTab />
+            </TabsContent>
           </Tabs>
         </section>
       </main>
