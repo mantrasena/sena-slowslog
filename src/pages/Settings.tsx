@@ -14,6 +14,7 @@ import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter,
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
+import AnalyticsTab from "@/components/AnalyticsTab";
 
 const CooldownDisplay = () => {
   const { data: cooldown, isLoading } = usePublishCooldown();
