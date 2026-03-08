@@ -17,6 +17,7 @@ interface AuthUser {
   roles: Role[];
   loading: boolean;
   isFounder: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthUser>({
