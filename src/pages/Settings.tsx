@@ -15,6 +15,33 @@ import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
 
+const CooldownDisplay = () => {
+  const { data: cooldown, isLoading } = usePublishCooldown();
+  if (isLoading) return null;
+
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-4">
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <Clock className="h-4 w-4 text-muted-foreground" />
+        <span>Slow Writing</span>
+      </div>
+      {cooldown?.canPublish ? (
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          kamu bisa menulis dan publish sekarang ✿
+        </p>
+      ) : (
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          kamu bisa menulis lagi dalam{" "}
+          <span className="font-medium text-foreground">
+            {cooldown?.daysLeft ? `${cooldown.daysLeft} hari ${cooldown.hoursLeft} jam` : `${cooldown?.hoursLeft} jam`}
+          </span>{" "}
+          lagi (◕ᴗ◕✿)
+        </p>
+      )}
+    </div>
+  );
+};
+
 const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
