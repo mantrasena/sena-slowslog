@@ -613,68 +613,6 @@ const Settings = () => {
               </div>
             </TabsContent>
 
-            {/* Drafts Tab */}
-            <TabsContent value="drafts" className="mt-6">
-              <div className="divide-y divide-border">
-                {draftsLoading ? (
-                  <p className="py-12 text-center text-sm text-muted-foreground">loading...</p>
-                ) : !drafts?.length ? (
-                  <p className="py-12 text-center text-sm text-muted-foreground">no drafts yet (◡‿◡)</p>
-                ) : (
-                  drafts.map((draft) => (
-                    <div key={draft.id} className="flex items-center justify-between py-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <FileText className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{draft.title || "untitled"}</p>
-                          {draft.subtitle && <p className="truncate text-xs text-muted-foreground">{draft.subtitle}</p>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <Link
-                          to={`/write?edit=${draft.id}`}
-                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          <PenLine className="h-3 w-3" /> edit
-                        </Link>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <button className="flex items-center gap-1.5 text-xs text-destructive/60 hover:text-destructive">
-                              <Trash2 className="h-3 w-3" /> delete
-                            </button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete draft?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                "{draft.title || "untitled"}" will be permanently deleted. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={async () => {
-                                  const { error } = await supabase.from("stories").delete().eq("id", draft.id);
-                                  if (error) {
-                                    toast.error("Failed to delete draft");
-                                  } else {
-                                    toast.success("Draft deleted (◕‿◕)");
-                                    queryClient.invalidateQueries({ queryKey: ["my-drafts"] });
-                                  }
-                                }}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </TabsContent>
 
             {/* Bookmarks Tab */}
             <TabsContent value="bookmarks" className="mt-6">
