@@ -13,6 +13,7 @@ import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Bookmarks from "./pages/Bookmarks";
 import InnerCircle from "./pages/InnerCircle";
+import InnerCirclePayment from "./pages/InnerCirclePayment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
