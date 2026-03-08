@@ -8,116 +8,140 @@ interface ArticleForPDF {
   author_name?: string;
 }
 
-const stripHtml = (html: string) => {
+const stripHtml = (html: string): string => {
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
   return tmp.textContent || tmp.innerText || "";
 };
 
-export const exportArticlesToPDF = (articles: ArticleForPDF[], _filename?: string) => {
+export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
   const now = new Date();
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const filename = `backup-${dateStr}`;
+  const y4 = now.getFullYear();
+  const m2 = String(now.getMonth() + 1).padStart(2, "0");
+  const d2 = String(now.getDate()).padStart(2, "0");
+  const filename = `backup-${y4}${m2}${d2}`;
 
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 24;
-  const maxWidth = pageWidth - margin * 2;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  const mg = 25;
+  const mw = pw - mg * 2;
+  let pageNum = 1;
 
-  const addPageNumber = (pageNum: number) => {
-    doc.setFontSize(8);
+  const footer = () => {
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(180);
-    doc.text(`${pageNum}`, pageWidth / 2, pageHeight - 12, { align: "center" });
+    doc.setTextColor(170, 170, 170);
+    doc.text(`${pageNum}`, pw / 2, ph - 10, { align: "center" });
   };
 
-  let globalPage = 1;
+  const newPage = () => {
+    footer();
+    doc.addPage();
+    pageNum++;
+    return mg;
+  };
 
   articles.forEach((article, idx) => {
     if (idx > 0) {
+      footer();
       doc.addPage();
-      globalPage++;
+      pageNum++;
     }
 
-    let y = margin + 10;
+    let y = mg;
 
-    // Top accent line
-    doc.setDrawColor(60);
-    doc.setLineWidth(0.8);
-    doc.line(margin, margin, margin + 40, margin);
-
-    // Title
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(30);
-    const titleLines = doc.splitTextToSize(article.title || "Untitled", maxWidth);
-    doc.text(titleLines, margin, y);
-    y += titleLines.length * 9 + 2;
-
-    // Subtitle
-    if (article.subtitle) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "italic");
-      doc.setTextColor(100);
-      const subLines = doc.splitTextToSize(article.subtitle, maxWidth);
-      doc.text(subLines, margin, y);
-      y += subLines.length * 6 + 4;
-    }
-
-    // Meta line
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(140);
-    const meta = [
-      article.author_name && `by ${article.author_name}`,
-      article.published_at && new Date(article.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
-    ].filter(Boolean).join("  ·  ");
-    if (meta) {
-      doc.text(meta, margin, y);
-      y += 10;
-    }
-
-    // Separator
-    doc.setDrawColor(220);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y, pageWidth - margin, y);
+    // ── Accent bar ──
+    doc.setFillColor(40, 40, 40);
+    doc.rect(mg, y, 32, 1, "F");
     y += 10;
 
-    // Content body
-    doc.setFontSize(10.5);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(50);
-    const text = stripHtml(article.content || "");
-    const paragraphs = text.split(/\n\s*\n/);
+    // ── Title ──
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(25, 25, 25);
+    const titleLines: string[] = doc.splitTextToSize(article.title || "Untitled", mw);
+    for (const line of titleLines) {
+      if (y > ph - 20) y = newPage();
+      doc.text(line, mg, y);
+      y += 10;
+    }
+    y += 1;
 
-    for (const paragraph of paragraphs) {
-      const trimmed = paragraph.trim();
-      if (!trimmed) continue;
-
-      const lines = doc.splitTextToSize(trimmed, maxWidth);
-      for (const line of lines) {
-        if (y > pageHeight - 24) {
-          addPageNumber(globalPage);
-          doc.addPage();
-          globalPage++;
-          y = margin;
-        }
-        doc.text(line, margin, y);
-        y += 5.2;
+    // ── Subtitle ──
+    if (article.subtitle) {
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(90, 90, 90);
+      const subLines: string[] = doc.splitTextToSize(article.subtitle, mw);
+      for (const line of subLines) {
+        if (y > ph - 20) y = newPage();
+        doc.text(line, mg, y);
+        y += 6.5;
       }
-      y += 3; // paragraph spacing
+      y += 3;
     }
 
-    addPageNumber(globalPage);
+    // ── Meta ──
+    const parts = [
+      article.author_name ? `by ${article.author_name}` : null,
+      article.published_at
+        ? new Date(article.published_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : null,
+    ].filter(Boolean);
+
+    if (parts.length) {
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(140, 140, 140);
+      doc.text(parts.join("  ·  "), mg, y);
+      y += 8;
+    }
+
+    // ── Separator ──
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.3);
+    doc.line(mg, y, pw - mg, y);
+    y += 10;
+
+    // ── Body ──
+    doc.setFontSize(10.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(45, 45, 45);
+
+    const raw = stripHtml(article.content || "");
+    const paragraphs = raw.split(/\n{2,}/);
+
+    for (const para of paragraphs) {
+      const trimmed = para.trim();
+      if (!trimmed) continue;
+
+      const lines: string[] = doc.splitTextToSize(trimmed, mw);
+      for (const line of lines) {
+        if (y > ph - 20) y = newPage();
+        doc.text(line, mg, y);
+        y += 5.5;
+      }
+      y += 4; // paragraph gap
+    }
+
+    footer();
   });
 
-  // Cover info on first page footer area
+  // Export info on page 1
   doc.setPage(1);
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(180);
-  doc.text(`Exported on ${now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}  ·  ${articles.length} article(s)`, margin, pageHeight - 18);
+  doc.setTextColor(180, 180, 180);
+  doc.text(
+    `Exported ${now.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}  ·  ${articles.length} article(s)`,
+    mg,
+    ph - 15
+  );
 
   doc.save(`${filename}.pdf`);
 };
