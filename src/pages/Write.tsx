@@ -69,20 +69,26 @@ const Write = () => {
 
     setAutoSaveStatus("saving");
     try {
-      await saveMutation.mutateAsync({
-        id: editId || undefined,
+      const result = await saveMutation.mutateAsync({
+        id: currentIdRef.current || undefined,
         title: title || "untitled",
         subtitle,
         content,
         is_draft: true,
       });
+      // Track the saved ID so subsequent auto-saves update instead of insert
+      if (result?.id && !currentIdRef.current) {
+        currentIdRef.current = result.id;
+        // Update URL without navigation so edit continues seamlessly
+        window.history.replaceState(null, "", `/write?edit=${result.id}`);
+      }
       lastSavedRef.current = current;
       setAutoSaveStatus("saved");
       setTimeout(() => setAutoSaveStatus("idle"), 2000);
     } catch {
       setAutoSaveStatus("idle");
     }
-  }, [title, subtitle, editId, user, saveMutation]);
+  }, [title, subtitle, user, saveMutation]);
 
   const updateWordCount = useCallback(() => {
     const text = contentRef.current?.innerText || "";
