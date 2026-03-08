@@ -238,9 +238,11 @@ const Admin = () => {
     fetchUsers();
   };
 
-  const deleteStory = async (id: string) => {
-    await supabase.from("stories").delete().eq("id", id);
+  const deleteStory = async () => {
+    if (!deleteStoryTarget) return;
+    await supabase.from("stories").delete().eq("id", deleteStoryTarget.id);
     toast.success("story deleted");
+    setDeleteStoryTarget(null);
     fetchStories();
     qc.invalidateQueries({ queryKey: ["stories"] });
   };
