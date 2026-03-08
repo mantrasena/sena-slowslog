@@ -9,7 +9,7 @@ import { exportArticlesToPDF } from "@/lib/pdf-export";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock } from "lucide-react";
 import { toast } from "sonner";
 import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
