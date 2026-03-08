@@ -1,6 +1,6 @@
 import { Role, ROLE_LABELS } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Crown, Star, Leaf } from "lucide-react";
+import { Crown, Star, Leaf, BadgeCheck } from "lucide-react";
 
 interface RoleBadgeProps {
   role: Role;
@@ -29,10 +29,16 @@ const roleConfig: Record<Role, { icon: typeof Crown; colors: string; iconColor: 
     colors: "bg-[hsl(220,50%,92%)] text-[hsl(220,50%,30%)] border-[hsl(220,45%,75%)]",
     iconColor: "text-[hsl(220,50%,45%)]",
   },
+  inner_circle: {
+    icon: BadgeCheck,
+    colors: "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,30%)] border-[hsl(45,70%,75%)]",
+    iconColor: "text-[hsl(45,90%,50%)]",
+  },
 };
 
 const RoleBadge = ({ role, variant = "card", className }: RoleBadgeProps) => {
   const config = roleConfig[role];
+  if (!config) return null;
   const Icon = config.icon;
 
   if (variant === "card") {

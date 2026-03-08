@@ -1,4 +1,4 @@
-export type Role = "founder" | "early_adopter" | "contributor" | "writer";
+export type Role = "founder" | "early_adopter" | "contributor" | "writer" | "inner_circle";
 
 export interface Author {
   id: string;
@@ -30,6 +30,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   early_adopter: "Early Adopter",
   contributor: "Contributor",
   writer: "Writer",
+  inner_circle: "Inner Circle",
 };
 
 export const ROLE_KAOMOJI: Record<Role, string> = {
@@ -37,4 +38,5 @@ export const ROLE_KAOMOJI: Record<Role, string> = {
   early_adopter: "(◕‿◕)",
   contributor: "(｡◕‿◕｡)",
   writer: "(￣▽￣)",
+  inner_circle: "(★‿★)",
 };
