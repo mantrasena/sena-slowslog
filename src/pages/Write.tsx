@@ -87,7 +87,7 @@ const Write = () => {
     } catch {
       setAutoSaveStatus("idle");
     }
-  }, [title, subtitle, user, saveMutation]);
+  }, [title, subtitle, user, saveMutation, editId, existingStory]);
 
   // Auto-save as draft every 30 seconds
   useEffect(() => {
