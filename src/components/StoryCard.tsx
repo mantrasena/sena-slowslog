@@ -1,7 +1,7 @@
 import { Story } from "@/lib/types";
 import RoleBadge from "./RoleBadge";
 import VerifiedBadge from "./VerifiedBadge";
-import { Eye, Pin } from "lucide-react";
+import { Eye, EyeOff, Pin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 
