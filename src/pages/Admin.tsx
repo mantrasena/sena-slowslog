@@ -370,7 +370,7 @@ const Admin = () => {
           <p className="mt-1 text-xs text-muted-foreground">founder access only (*´▽`*)</p>
 
           <Tabs defaultValue="users" className="mt-8">
-            <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0">
+            <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0 overflow-x-auto overflow-y-hidden flex-nowrap scrollbar-none">
               <TabsTrigger value="users" className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none">
                 <Users className="h-3.5 w-3.5 mr-1.5" /> Users ({users.length})
               </TabsTrigger>
