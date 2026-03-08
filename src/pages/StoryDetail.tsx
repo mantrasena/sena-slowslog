@@ -156,6 +156,51 @@ const StoryDetail = () => {
               style={{ fontSize: `${fontSize}px` }}
               dangerouslySetInnerHTML={{ __html: story.content?.replace(/style="[^"]*"/gi, '') || "" }}
             />
+
+            {/* High Five */}
+            <div className="mt-12 flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (!user) {
+                          toast.error("login first to give a high five (◕‿◕)");
+                          return;
+                        }
+                        highFiveMutation.mutate({ storyId: story.id, hasHighFived: !!hasHighFived });
+                      }}
+                      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                        hasHighFived
+                          ? "border-foreground/20 bg-foreground/5 text-foreground"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20"
+                      }`}
+                    >
+                      <HandMetal className="h-3.5 w-3.5" />
+                      <span>{highFiveCount ?? 0}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Respectful Greeting</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            {/* Divider */}
+            <div className="my-10 h-px w-full bg-border" />
+
+            {/* More from author */}
+            {story.author && (
+              <div className="pb-8">
+                <Link
+                  to={`/profile/${story.author.username}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  More from {story.author.display_name} →
+                </Link>
+              </div>
+            )}
           </article>
         </main>
       </div>
