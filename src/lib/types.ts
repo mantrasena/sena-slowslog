@@ -29,6 +29,7 @@ export interface Story {
 
 export const ROLE_LABELS: Record<Role, string> = {
   founder: "Founder",
+  admin: "Admin",
   early_adopter: "Early Adopter",
   contributor: "Contributor",
   writer: "Writer",
