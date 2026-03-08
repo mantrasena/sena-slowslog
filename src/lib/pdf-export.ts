@@ -22,6 +22,8 @@ const sanitizeHtml = (html: string): string =>
     .replace(/\s*size="[^"]*"/gi, "")
     .replace(/\s*face="[^"]*"/gi, "")
     .replace(/\s*color="[^"]*"/gi, "")
+    .replace(/<blockquote[^>]*>/gi, "<p>")
+    .replace(/<\/blockquote>/gi, "</p>")
     // Strip inline formatting tags to ensure uniform text
     .replace(/<\/?(b|strong|i|em|u|s|strike|del|ins|mark|small|big|sub|sup|span|a)[^>]*>/gi, "");
 
