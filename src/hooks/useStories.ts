@@ -35,14 +35,23 @@ export const usePublishedStories = () =>
       const { data: roles } = await supabase.from("user_roles").select("*").in("user_id", userIds);
 
       const profileMap = new Map((profiles || []).map((p) => [p.user_id, p]));
-      const roleMap = new Map((roles || []).map((r) => [r.user_id, r.role]));
+
+      // Group all roles by user, then pick primary (non-inner_circle) role
+      const rolesMap = new Map<string, string[]>();
+      (roles || []).forEach((r) => {
+        const existing = rolesMap.get(r.user_id) || [];
+        existing.push(r.role);
+        rolesMap.set(r.user_id, existing);
+      });
 
       return data.map((s: any) => {
         const p = profileMap.get(s.user_id);
+        const userRoles = rolesMap.get(s.user_id) || [];
+        const primaryRole = userRoles.find((r) => r !== "inner_circle") || "writer";
         return mapStory({
           ...s,
           profiles: p || null,
-          user_roles: [{ role: roleMap.get(s.user_id) || "writer" }],
+          user_roles: [{ role: primaryRole }],
         });
       });
     },
@@ -87,10 +96,13 @@ export const useStory = (id: string | undefined) =>
         .select("role")
         .eq("user_id", data.user_id);
 
+      const allRoles = (roles || []).map((r) => r.role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+
       // Use secure function for content
       const { data: secureContent } = await supabase.rpc("get_story_content", { p_story_id: id! });
 
-      const storyData = { ...data, content: secureContent ?? data.content, profiles: profile, user_roles: roles || [{ role: "writer" }] };
+      const storyData = { ...data, content: secureContent ?? data.content, profiles: profile, user_roles: [{ role: primaryRole }] };
       return mapStory(storyData);
     },
   });
@@ -121,7 +133,10 @@ export const useUserStories = (userId: string | undefined) =>
         .select("role")
         .eq("user_id", userId!);
 
-      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: roles || [{ role: "writer" }] }));
+      const allRoles = (roles || []).map((r) => r.role);
+      const primaryRole = allRoles.find((r) => r !== "inner_circle") || "writer";
+
+      return data.map((s: any) => mapStory({ ...s, profiles: profile, user_roles: [{ role: primaryRole }] }));
     },
   });
 
