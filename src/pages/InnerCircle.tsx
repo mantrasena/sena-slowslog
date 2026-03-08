@@ -165,46 +165,6 @@ const InnerCircle = () => {
               </div>
             ))}
           </div>
-
-          {/* Upload transfer proof section */}
-          {selectedPlan && !isInnerCircle && !pendingOrder && (
-            <div className="mt-8 rounded-xl border border-border p-6 text-left">
-              <h3 className="font-serif text-base font-medium">Upload Transfer Proof</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Selected plan: <strong>{plans.find((p) => p.id === selectedPlan)?.name}</strong> ({plans.find((p) => p.id === selectedPlan)?.price})
-              </p>
-
-              <label className="mt-4 flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed border-border p-6 transition-colors hover:border-muted-foreground/50">
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {proofFile ? proofFile.name : "Click to upload transfer screenshot"}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                />
-              </label>
-
-              <div className="mt-4 flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => { setSelectedPlan(null); setProofFile(null); }}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSubmitOrder}
-                  disabled={!proofFile || submitting}
-                  className="flex-1 bg-[hsl(45,90%,50%)] text-white hover:bg-[hsl(45,90%,45%)]"
-                >
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Order"}
-                </Button>
-              </div>
-            </div>
-          )}
         </section>
       </main>
       <Footer />
