@@ -94,13 +94,13 @@ const StoryDetail = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
-                      <Pencil className="h-4 w-4" /> Edit article
+                      <Pencil className="h-4 w-4" /> Edit story
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
                       <Pin className="h-4 w-4" /> {story.is_pinned ? "Unpin from profile" : "Pin to profile"}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive">
-                      <Trash2 className="h-4 w-4" /> Delete article
+                      <Trash2 className="h-4 w-4" /> Delete story
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
