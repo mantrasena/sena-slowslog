@@ -1,6 +1,6 @@
 import { Role, ROLE_LABELS } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Crown, Star, Leaf, BadgeCheck } from "lucide-react";
+import { Crown, Star, Leaf, BadgeCheck, ShieldCheck } from "lucide-react";
 
 interface RoleBadgeProps {
   role: Role;
