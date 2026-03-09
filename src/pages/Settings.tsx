@@ -22,7 +22,11 @@ import AnalyticsTab from "@/components/AnalyticsTab";
 
 const CooldownDisplay = () => {
   const { data: cooldown, isLoading } = usePublishCooldown();
+  const { roles } = useAuth();
+  const isInnerCircle = roles.includes("inner_circle");
   if (isLoading) return null;
+
+  const days = cooldown?.cooldownDays ?? (isInnerCircle ? 3 : 6);
 
   return (
     <div className="rounded-md border border-border bg-muted/30 p-4">
@@ -30,6 +34,11 @@ const CooldownDisplay = () => {
         <Clock className="h-4 w-4 text-muted-foreground" />
         <span>Slow Writing</span>
       </div>
+      <p className="mt-1 text-[10px] text-muted-foreground/70">
+        {isInnerCircle
+          ? `inner circle: 1 publish every ${days} days ✦`
+          : `1 publish every ${days} days`}
+      </p>
       {cooldown?.canPublish ? (
         <p className="mt-1.5 text-xs text-muted-foreground">
           you can write and publish now ✿
