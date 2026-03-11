@@ -15,6 +15,7 @@ import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
+import VoucherManager from "@/components/admin/VoucherManager";
 import {
   AlertDialog,
   AlertDialogAction,
