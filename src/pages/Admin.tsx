@@ -649,6 +649,8 @@ const Admin = () => {
                     />
                   </div>
                 </div>
+
+                <VoucherManager />
               </div>
             </TabsContent>
           </Tabs>
