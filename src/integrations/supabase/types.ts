@@ -327,6 +327,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_voucher_usage: { Args: { p_code: string }; Returns: undefined }
       record_story_view:
         | {
             Args: { p_story_id: string; p_viewer_id: string }
