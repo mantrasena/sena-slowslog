@@ -437,15 +437,19 @@ const Admin = () => {
                           <RoleBadge role={u.role} variant="card" />
                         </div>
                         <p className="text-xs text-muted-foreground">@{u.username}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <input
+                            type="date"
+                            defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
+                            onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
+                            className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
+                            title="Change join date"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
-                        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
-                          u.hasInnerCircle
-                            ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                            : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
                         }`}
                         title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
                       >
