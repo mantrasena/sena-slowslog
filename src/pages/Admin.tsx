@@ -183,6 +183,7 @@ const Admin = () => {
           username: p.username,
           display_name: p.display_name,
           created_at: p.created_at,
+          joined_at: (p as any).joined_at || p.created_at,
           role: primaryRole as Role,
           hasInnerCircle,
         };
