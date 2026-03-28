@@ -133,7 +133,7 @@ const Profile = () => {
                   <FileText className="h-3 w-3" /> {profileData.storyCount} stories
                 </span>
                 <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> Joined {format(new Date(profileData.created_at), "MMM yyyy")}
+                  <Calendar className="h-3 w-3" /> Joined {format(new Date(profileData.joined_at || profileData.created_at), "MMM yyyy")}
                 </span>
               </div>
             </div>

@@ -32,6 +32,7 @@ interface UserRow {
   username: string;
   display_name: string;
   created_at: string;
+  joined_at: string | null;
   role: Role;
   hasInnerCircle: boolean;
 }
