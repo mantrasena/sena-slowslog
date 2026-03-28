@@ -450,6 +450,12 @@ const Admin = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
+                        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
+                          u.hasInnerCircle
+                            ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                            : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
                         }`}
                         title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
                       >
