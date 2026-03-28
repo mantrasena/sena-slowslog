@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle } from "lucide-react";
+import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
@@ -32,6 +33,7 @@ interface UserRow {
   username: string;
   display_name: string;
   created_at: string;
+  joined_at: string | null;
   role: Role;
   hasInnerCircle: boolean;
 }
@@ -182,6 +184,7 @@ const Admin = () => {
           username: p.username,
           display_name: p.display_name,
           created_at: p.created_at,
+          joined_at: (p as any).joined_at || p.created_at,
           role: primaryRole as Role,
           hasInnerCircle,
         };
@@ -284,6 +287,14 @@ const Admin = () => {
     await supabase.from("user_roles").delete().eq("user_id", userId).neq("role", "inner_circle");
     await supabase.from("user_roles").insert({ user_id: userId, role: newRole });
     toast.success("role updated (◕‿◕)");
+    fetchUsers();
+  };
+
+  const updateJoinDate = async (userId: string, dateStr: string) => {
+    if (!dateStr) return;
+    const joined = new Date(dateStr).toISOString();
+    await supabase.from("profiles").update({ joined_at: joined } as any).eq("user_id", userId);
+    toast.success("join date updated (◕‿◕)");
     fetchUsers();
   };
 
@@ -426,6 +437,16 @@ const Admin = () => {
                           <RoleBadge role={u.role} variant="card" />
                         </div>
                         <p className="text-xs text-muted-foreground">@{u.username}</p>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Calendar className="h-3 w-3 text-muted-foreground" />
+                          <input
+                            type="date"
+                            defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
+                            onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
+                            className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
+                            title="Change join date"
+                          />
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
