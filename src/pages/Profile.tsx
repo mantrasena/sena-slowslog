@@ -128,9 +128,12 @@ const Profile = () => {
                 <RoleBadge role={profileData.role} variant="profile" />
               </div>
               <p className="text-xs text-muted-foreground">@{profileData.username}</p>
-              <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <FileText className="h-3 w-3" /> {profileData.storyCount} stories
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> Joined {format(new Date(profileData.created_at), "MMM yyyy")}
                 </span>
               </div>
             </div>
