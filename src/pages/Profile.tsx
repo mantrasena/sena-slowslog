@@ -10,7 +10,8 @@ import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings, Award, ArrowUpDown } from "lucide-react";
+import { FileText, Settings, Award, ArrowUpDown, Calendar } from "lucide-react";
+import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import type { Role } from "@/lib/types";
@@ -127,9 +128,12 @@ const Profile = () => {
                 <RoleBadge role={profileData.role} variant="profile" />
               </div>
               <p className="text-xs text-muted-foreground">@{profileData.username}</p>
-              <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="mt-1 flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <FileText className="h-3 w-3" /> {profileData.storyCount} stories
+                </span>
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" /> Joined {format(new Date(profileData.created_at), "MMM yyyy")}
                 </span>
               </div>
             </div>
