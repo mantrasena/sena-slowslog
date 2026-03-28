@@ -290,6 +290,14 @@ const Admin = () => {
     fetchUsers();
   };
 
+  const updateJoinDate = async (userId: string, dateStr: string) => {
+    if (!dateStr) return;
+    const joined = new Date(dateStr).toISOString();
+    await supabase.from("profiles").update({ joined_at: joined } as any).eq("user_id", userId);
+    toast.success("join date updated (◕‿◕)");
+    fetchUsers();
+  };
+
   const toggleInnerCircle = async (userId: string, currentlyHas: boolean) => {
     if (currentlyHas) {
       await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "inner_circle");
