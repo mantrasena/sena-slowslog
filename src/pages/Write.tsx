@@ -4,6 +4,8 @@ import { ArrowLeft, Eye, ImageIcon, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveStory, useStory } from "@/hooks/useStories";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
+import { useEditorImages } from "@/hooks/useEditorImages";
+import EditorImageOverlay from "@/components/EditorImageOverlay";
 import { compressImage } from "@/lib/image-compress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +34,7 @@ const Write = () => {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
   const currentIdRef = useRef<string | null>(editId);
+  const { activeImg, hoveredImg, removeImage, clearStates, overlayRef } = useEditorImages(contentRef);
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
@@ -161,13 +164,13 @@ const Write = () => {
 
     setUploading(true);
     try {
-      const compressed = await compressImage(file);
-      const ext = "webp";
+      const compressed = await compressImage(file, { quality: 0.9, format: "image/jpeg" });
+      const ext = "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
 
       const { error } = await supabase.storage
         .from("story-images")
-        .upload(path, compressed, { contentType: "image/webp" });
+        .upload(path, compressed, { contentType: "image/jpeg" });
 
       if (error) throw error;
 
@@ -333,6 +336,11 @@ const Write = () => {
           }}
           data-placeholder="begin writing..."
           className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit]"
+        />
+        <EditorImageOverlay
+          activeImg={activeImg}
+          onDelete={removeImage}
+          overlayRef={overlayRef}
         />
       </main>
     </div>

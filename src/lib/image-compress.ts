@@ -1,9 +1,19 @@
 const MAX_WIDTH = 1400;
 const MAX_HEIGHT = 1400;
-const QUALITY = 0.8;
+const DEFAULT_QUALITY = 0.8;
 
-export const compressImage = (file: File): Promise<Blob> =>
+interface CompressOptions {
+  quality?: number;
+  format?: "image/webp" | "image/jpeg";
+}
+
+export const compressImage = (
+  file: File,
+  options?: CompressOptions
+): Promise<Blob> =>
   new Promise((resolve, reject) => {
+    const quality = options?.quality ?? DEFAULT_QUALITY;
+    const format = options?.format ?? "image/webp";
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -26,8 +36,8 @@ export const compressImage = (file: File): Promise<Blob> =>
       ctx.drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => (blob ? resolve(blob) : reject(new Error("Compression failed"))),
-        "image/webp",
-        QUALITY
+        format,
+        quality
       );
     };
     img.onerror = () => reject(new Error("Failed to load image"));
