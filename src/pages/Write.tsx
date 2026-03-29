@@ -164,8 +164,8 @@ const Write = () => {
 
     setUploading(true);
     try {
-      const compressed = await compressImage(file);
-      const ext = "webp";
+      const compressed = await compressImage(file, { quality: 0.9, format: "image/jpeg" });
+      const ext = "jpg";
       const path = `${user.id}/${Date.now()}.${ext}`;
 
       const { error } = await supabase.storage
