@@ -337,6 +337,11 @@ const Write = () => {
           data-placeholder="begin writing..."
           className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit]"
         />
+        <EditorImageOverlay
+          activeImg={activeImg}
+          onDelete={removeImage}
+          overlayRef={overlayRef}
+        />
       </main>
     </div>
   );
