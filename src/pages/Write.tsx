@@ -34,6 +34,7 @@ const Write = () => {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSavedRef = useRef<string>("");
   const currentIdRef = useRef<string | null>(editId);
+  const { activeImg, hoveredImg, removeImage, clearStates, overlayRef } = useEditorImages(contentRef);
 
   useEffect(() => {
     if (existingStory && contentRef.current) {
