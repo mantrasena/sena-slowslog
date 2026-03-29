@@ -170,7 +170,7 @@ const Write = () => {
 
       const { error } = await supabase.storage
         .from("story-images")
-        .upload(path, compressed, { contentType: "image/webp" });
+        .upload(path, compressed, { contentType: "image/jpeg" });
 
       if (error) throw error;
 
