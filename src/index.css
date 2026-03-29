@@ -104,4 +104,14 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* Editor image states */
+  .editor-img-hover {
+    outline: 2px solid #86efac;
+    outline-offset: 0px;
+  }
+  .editor-img-active {
+    outline: 2px solid #16a34a;
+    outline-offset: 0px;
+  }
 }
