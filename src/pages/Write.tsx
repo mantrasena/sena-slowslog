@@ -4,6 +4,8 @@ import { ArrowLeft, Eye, ImageIcon, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveStory, useStory } from "@/hooks/useStories";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
+import { useEditorImages } from "@/hooks/useEditorImages";
+import EditorImageOverlay from "@/components/EditorImageOverlay";
 import { compressImage } from "@/lib/image-compress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
