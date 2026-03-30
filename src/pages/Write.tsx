@@ -85,7 +85,7 @@ const Write = () => {
       // Track the saved ID so subsequent auto-saves update instead of insert
       if (result?.id && !currentIdRef.current) {
         currentIdRef.current = result.id;
-        window.history.replaceState(null, "", `/write?edit=${result.id}`);
+        window.history.replaceState(null, "", `/write?edit=${result.id}&from=${encodeURIComponent(fromParam)}`);
       }
       lastSavedRef.current = current;
       setAutoSaveStatus("saved");
