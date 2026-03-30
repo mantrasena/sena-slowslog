@@ -112,7 +112,7 @@ const StoryDetail = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
+                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}&from=/story/${story.id}`)} className="gap-2 cursor-pointer">
                       <Pencil className="h-4 w-4" /> Edit article
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
@@ -221,7 +221,7 @@ const StoryDetail = () => {
               </div>
             ) : (
               <div
-                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-1"
+                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-1 [&_p.spacer]:!my-0 [&_p.spacer]:!h-4"
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{
                   __html: (story.content || "")

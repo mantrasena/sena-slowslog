@@ -23,6 +23,7 @@ const Write = () => {
   const { data: existingStory } = useStory(editId || undefined);
   const { data: cooldown } = usePublishCooldown();
 
+  const fromParam = searchParams.get("from") || "/";
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
@@ -84,7 +85,7 @@ const Write = () => {
       // Track the saved ID so subsequent auto-saves update instead of insert
       if (result?.id && !currentIdRef.current) {
         currentIdRef.current = result.id;
-        window.history.replaceState(null, "", `/write?edit=${result.id}`);
+        window.history.replaceState(null, "", `/write?edit=${result.id}&from=${encodeURIComponent(fromParam)}`);
       }
       lastSavedRef.current = current;
       setAutoSaveStatus("saved");
@@ -160,15 +161,17 @@ const Write = () => {
       if (result?.id) currentIdRef.current = result.id;
       lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
-      navigate(isDraft ? "/settings" : "/");
+      navigate(isDraft ? "/settings" : fromParam);
     } catch (e: any) {
       toast.error(e.message);
     }
   };
 
-  const insertKaomoji = (k: string) => {
+  const insertKaomoji = (_k: string) => {
+    // Kaomoji picker now copies to clipboard; user pastes manually
+    // This callback is kept as fallback for clipboard API failure
     contentRef.current?.focus();
-    document.execCommand("insertText", false, k);
+    document.execCommand("insertText", false, _k);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -230,7 +233,7 @@ const Write = () => {
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
           <div className="my-6 h-px w-12 bg-border" />
           <div
-            className="prose prose-neutral max-w-none text-lg leading-relaxed"
+            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-1 [&_p.spacer]:!my-0 [&_p.spacer]:!h-4"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>

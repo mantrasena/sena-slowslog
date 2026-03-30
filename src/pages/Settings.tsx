@@ -660,7 +660,7 @@ const Settings = () => {
                         </div>
                         <div className="flex items-center gap-3 flex-shrink-0 ml-3">
                           <Link
-                            to={`/write?edit=${draft.id}`}
+                            to={`/write?edit=${draft.id}&from=/settings`}
                             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
                           >
                             <PenLine className="h-3 w-3" /> edit
