@@ -10,6 +10,7 @@ import { compressImage } from "@/lib/image-compress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import KaomojiPicker from "@/components/KaomojiPicker";
+import { normalizeHtmlContent, sanitizePastedHtml } from "@/lib/html-normalize";
 
 const AUTO_SAVE_INTERVAL = 30_000; // 30 seconds
 
