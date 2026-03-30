@@ -347,7 +347,8 @@ const Write = () => {
           onInput={() => {
             updateWordCount();
             // Prevent browser auto-creating lists from "- " or "1. " patterns
-            if (contentRef.current) {
+            // Skip if we just intentionally toggled a list
+            if (contentRef.current && !isTogglingList.current) {
               contentRef.current.querySelectorAll("ul:not([data-list]), ol:not([data-list])").forEach((list) => {
                 // Browser just auto-created this list — unwrap it
                 const items = list.querySelectorAll("li");
