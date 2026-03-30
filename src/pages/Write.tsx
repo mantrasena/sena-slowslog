@@ -42,7 +42,7 @@ const Write = () => {
     if (existingStory && contentRef.current) {
       setTitle(existingStory.title);
       setSubtitle(existingStory.subtitle || "");
-      contentRef.current.innerHTML = existingStory.content || "";
+      contentRef.current.innerHTML = normalizeHtmlContent(existingStory.content || "");
       updateWordCount();
       // Track initial content to avoid unnecessary saves
       lastSavedRef.current = JSON.stringify({
@@ -56,6 +56,14 @@ const Write = () => {
   useEffect(() => {
     if (!user) navigate("/auth");
   }, [user]);
+
+  useEffect(() => {
+    try {
+      document.execCommand("defaultParagraphSeparator", false, "p");
+    } catch {
+      // no-op: older browsers may ignore this command
+    }
+  }, []);
 
   // Sync currentIdRef when editId changes
   useEffect(() => {
@@ -234,7 +242,7 @@ const Write = () => {
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
           <div className="my-6 h-px w-12 bg-border" />
           <div
-            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6"
+            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6 [&_div]:!my-2 [&_div.spacer]:!my-0 [&_div.spacer]:!h-6"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
@@ -257,7 +265,7 @@ const Write = () => {
               {autoSaveStatus === "saving" ? "saving..." : autoSaveStatus === "saved" ? "saved ✓" : `${wordCount} words · ${readTime} min`}
             </span>
             <button
-              onClick={() => { setPreviewHtml(contentRef.current?.innerHTML || ""); setPreview(true); }}
+              onClick={() => { setPreviewHtml(normalizeHtmlContent(contentRef.current?.innerHTML || "")); setPreview(true); }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               <Eye className="inline h-3.5 w-3.5" /> preview
@@ -337,35 +345,42 @@ const Write = () => {
           suppressContentEditableWarning
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-              const sel = window.getSelection();
-              const node = sel?.anchorNode;
+              const selection = window.getSelection();
+              const anchorNode = selection?.anchorNode;
+              const anchorElement = anchorNode
+                ? anchorNode.nodeType === Node.ELEMENT_NODE
+                  ? (anchorNode as Element)
+                  : anchorNode.parentElement
+                : null;
+
               // Don't intercept Enter inside a list
-              if (node) {
-                const parentLi = (node.nodeType === Node.ELEMENT_NODE ? node as Element : (node as Node).parentElement)?.closest("li");
-                if (parentLi) return;
-              }
+              if (anchorElement?.closest("li")) return;
 
               e.preventDefault();
 
-              // Detect if current block is empty → double-Enter = spacer
-              const currentBlock = node?.nodeType === Node.ELEMENT_NODE
-                ? (node as Element)
-                : node?.parentElement;
-              const closestP = currentBlock?.closest("p, div[contenteditable]");
-              const isEmptyBlock = closestP && closestP !== contentRef.current &&
-                (!closestP.textContent?.trim()) && !closestP.querySelector("img");
+              const block = anchorElement?.closest("p, div");
+              const isRootBlock = !block || block === contentRef.current;
+              const isEmptyBlock =
+                !!block &&
+                !isRootBlock &&
+                !block.textContent?.trim() &&
+                !block.querySelector("img");
 
-              if (isEmptyBlock && closestP) {
-                closestP.classList.add("spacer");
-                closestP.innerHTML = "<br>";
+              if (isEmptyBlock && block) {
+                const spacer = document.createElement("p");
+                spacer.className = "spacer";
+                spacer.innerHTML = "<br>";
+                block.replaceWith(spacer);
+
                 const newP = document.createElement("p");
                 newP.innerHTML = "<br>";
-                closestP.insertAdjacentElement("afterend", newP);
+                spacer.insertAdjacentElement("afterend", newP);
+
                 const range = document.createRange();
-                range.setStart(newP, 0);
+                range.selectNodeContents(newP);
                 range.collapse(true);
-                sel?.removeAllRanges();
-                sel?.addRange(range);
+                selection?.removeAllRanges();
+                selection?.addRange(range);
               } else {
                 document.execCommand("insertParagraph");
               }
@@ -381,10 +396,9 @@ const Write = () => {
                 const items = list.querySelectorAll("li");
                 const fragment = document.createDocumentFragment();
                 items.forEach((li) => {
-                  const span = document.createElement("span");
-                  span.innerHTML = li.innerHTML;
-                  fragment.appendChild(span);
-                  fragment.appendChild(document.createElement("br"));
+                  const p = document.createElement("p");
+                  p.innerHTML = li.innerHTML || "<br>";
+                  fragment.appendChild(p);
                 });
                 list.parentNode?.replaceChild(fragment, list);
               });
@@ -403,7 +417,7 @@ const Write = () => {
             updateWordCount();
           }}
           data-placeholder="begin writing..."
-          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] [&_p]:my-2 [&_p.spacer]:my-0 [&_p.spacer]:h-6"
+          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] [&_p]:my-2 [&_p.spacer]:my-0 [&_p.spacer]:h-6 [&_div]:my-2 [&_div.spacer]:my-0 [&_div.spacer]:h-6"
         />
         <EditorImageOverlay
           activeImg={activeImg}
