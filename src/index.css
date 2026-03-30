@@ -114,4 +114,14 @@
     outline: 2px solid #16a34a;
     outline-offset: 0px;
   }
+
+  /* Editor list styling */
+  [contenteditable] ul[data-list] {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  [contenteditable] ul[data-list] li {
+    margin-bottom: 0.25rem;
+  }
 }
