@@ -1,40 +1,44 @@
 
 
-## Plan: Fix Logo, Update Footer, and Add Search Functionality
+# Fix: Paragraph-Based Editor (Medium/Blogger Style)
 
-### 1. Fix Logo Kaomoji Color
-The issue is on line 30 of `Header.tsx` — the kaomoji `(◕ᴗ◕✿)` is wrapped in `text-muted-foreground`, making it appear faded/transparent. Same issue on line 49 of `Auth.tsx`.
+## Root Cause
 
-**Fix:** Remove the separate `<span>` wrapper and make the entire logo text `text-primary` (black), so "Sena (◕ᴗ◕✿)" renders as one unified color.
+The editor currently uses `insertLineBreak` (creates `<br>` tags), then the normalizer converts `<br>` to `<p>` for storage. But when re-editing, the `<p>` structure doesn't convert back to visual breaks — causing inconsistency across the write → publish → re-edit cycle.
 
-### 2. Update Footer
-Current footer has a single `<p>` with both lines. Change to two separate lines with "Mantra" in bold:
+## Solution
 
-```
-Built and maintained by **Mantra**
-A work in progress, taking it slow.
-```
+Switch the editor to work **natively with `<p>` blocks**, like Medium and Blogger. Every line is a `<p>`, and double-Enter creates `<p class="spacer"><br></p>`.
 
-Style: `font-mono text-xs text-muted-foreground`, with `<strong>` on "Mantra".
+## Changes
 
-### 3. Add Search Functionality
-Currently the search button in the Header toggles `searchOpen` state but nothing happens. Will build a full search dialog using the existing `CommandDialog` component (cmdk).
+### 1. `src/pages/Write.tsx` — Editor behavior
 
-**Search features:**
-- Opens a command dialog (Cmd+K shortcut too)
-- Searches both **stories** (by title/subtitle) and **users** (by username/display_name)
-- Results grouped into "Stories" and "Users" sections
-- Clicking a story navigates to `/story/:id`, clicking a user navigates to `/profile/:username`
-- Debounced search query against the database
+- **Remove** the `onKeyDown` handler that intercepts Enter and calls `insertLineBreak`
+- **Replace** with a handler that uses `insertParagraph` (browser-native `<p>` creation)
+- On double-Enter (detect empty current paragraph), insert a `<p class="spacer"><br></p>` spacer
+- On initial load of existing story content: ensure content is already `<p>`-based (it is, from normalizer), so it loads correctly
+- Add CSS to the contentEditable div for consistent `<p>` spacing: `[&_p]:my-0` base spacing + spacer height
 
-**Implementation:**
-- Create `src/components/SearchDialog.tsx` — uses `CommandDialog`, `CommandInput`, `CommandList`, `CommandGroup`, `CommandItem`
-- Queries `stories` table (where `is_draft = false`, title/subtitle ilike search term) and `profiles` table (username/display_name ilike search term)
-- Update `Header.tsx` to render `SearchDialog` with `searchOpen` state instead of just toggling a boolean
+### 2. `src/lib/html-normalize.ts` — Normalizer adjustments
 
-### Files to modify:
-- `src/components/Header.tsx` — fix logo color, integrate SearchDialog
-- `src/pages/Auth.tsx` — fix logo color
-- `src/components/Footer.tsx` — two-line layout with bold Mantra
-- `src/components/SearchDialog.tsx` — new file for search
+- Keep the existing logic for converting stray `<br>` and text nodes into `<p>` blocks (handles legacy/pasted content)
+- Fix the `<p>` handler (line 80-92): when a `<p>` contains `<br>`, split correctly but also **preserve empty splits as spacer paragraphs** instead of discarding them
+- Ensure idempotency: running normalizer on already-normalized content should produce the same output
+
+### 3. `src/pages/StoryDetail.tsx` — Published view
+
+- Keep existing `[&_p]:!my-2` and `[&_p.spacer]` styles (already correct)
+- No changes needed if normalizer output is consistent
+
+### 4. Preview in `Write.tsx`
+
+- Same prose styles as StoryDetail for consistency
+
+## Result
+
+- **Single Enter** → new `<p>` (normal paragraph break)
+- **Double Enter** → `<p class="spacer"><br></p>` (visible gap)
+- **Storage** → clean `<p>` HTML, consistent across save/load cycles
+- **Re-edit** → content loads exactly as written, no lost spacing
 
