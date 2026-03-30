@@ -63,7 +63,7 @@ const Write = () => {
 
   const autoSaveDraft = useCallback(async () => {
     if (!user || !contentRef.current) return;
-    const content = contentRef.current.innerHTML || "";
+    const content = normalizeHtmlContent(contentRef.current.innerHTML || "");
     if (!title.trim() && !content.trim()) return;
 
     const current = JSON.stringify({ title, subtitle, content });
