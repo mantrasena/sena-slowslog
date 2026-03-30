@@ -50,12 +50,21 @@ export const normalizeHtmlContent = (html: string): string => {
   const isBr = (node: Node) =>
     node.nodeType === Node.ELEMENT_NODE && (node as Element).tagName === "BR";
 
+  let consecutiveBr = 0;
+
   for (const node of nodes) {
     if (isBr(node)) {
       // BR = paragraph boundary
       flushInline();
+      consecutiveBr++;
+      // Double-enter (2+ consecutive BRs) → insert empty spacer paragraph
+      if (consecutiveBr >= 2) {
+        result.push(`<p class="spacer"><br></p>`);
+      }
       continue;
     }
+
+    consecutiveBr = 0;
 
     if (node.nodeType === Node.ELEMENT_NODE) {
       const el = node as Element;

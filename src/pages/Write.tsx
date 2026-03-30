@@ -161,7 +161,7 @@ const Write = () => {
       if (result?.id) currentIdRef.current = result.id;
       lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
-      navigate(isDraft ? "/settings" : "/");
+      navigate(isDraft ? "/settings" : fromParam);
     } catch (e: any) {
       toast.error(e.message);
     }
