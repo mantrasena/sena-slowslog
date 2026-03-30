@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Eye, ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, ImageIcon, Loader2, Strikethrough, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveStory, useStory } from "@/hooks/useStories";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
@@ -10,6 +10,7 @@ import { compressImage } from "@/lib/image-compress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import KaomojiPicker from "@/components/KaomojiPicker";
+import { normalizeHtmlContent, sanitizePastedHtml } from "@/lib/html-normalize";
 
 const AUTO_SAVE_INTERVAL = 30_000; // 30 seconds
 
@@ -62,7 +63,7 @@ const Write = () => {
 
   const autoSaveDraft = useCallback(async () => {
     if (!user || !contentRef.current) return;
-    const content = contentRef.current.innerHTML || "";
+    const content = normalizeHtmlContent(contentRef.current.innerHTML || "");
     if (!title.trim() && !content.trim()) return;
 
     const current = JSON.stringify({ title, subtitle, content });
@@ -111,6 +112,17 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  const toggleBulletList = () => {
+    document.execCommand("insertUnorderedList", false);
+    // Mark the list so normalization preserves it
+    if (contentRef.current) {
+      contentRef.current.querySelectorAll("ul:not([data-list])").forEach((ul) => {
+        ul.setAttribute("data-list", "true");
+      });
+    }
+    contentRef.current?.focus();
+  };
+
   const bypassCooldown = isFounder || isAdmin;
   const isEditingPublished = !!editId && existingStory && !existingStory.is_draft;
   const canPublish = bypassCooldown || isEditingPublished || cooldown?.canPublish !== false;
@@ -122,7 +134,8 @@ const Write = () => {
   };
 
   const handleSave = async (isDraft: boolean) => {
-    const content = contentRef.current?.innerHTML || "";
+    const rawContent = contentRef.current?.innerHTML || "";
+    const content = normalizeHtmlContent(rawContent);
     if (!title.trim()) {
       toast.error("title is required");
       return;
@@ -277,10 +290,16 @@ const Write = () => {
 
         <div className="my-6 h-px w-12 bg-border" />
 
-        <div className="mb-4 flex items-center gap-2 text-muted-foreground">
+        <div className="mb-4 flex items-center gap-1.5 sm:gap-2 text-muted-foreground flex-wrap">
           <button onClick={() => execCommand("bold")} className="h-7 w-7 rounded text-xs font-bold hover:text-foreground" title="Bold">B</button>
           <button onClick={() => execCommand("italic")} className="h-7 w-7 rounded text-xs italic hover:text-foreground" title="Italic">I</button>
           <button onClick={() => execCommand("underline")} className="h-7 w-7 rounded text-xs underline hover:text-foreground" title="Underline">U</button>
+          <button onClick={() => execCommand("strikeThrough")} className="h-7 w-7 rounded hover:text-foreground flex items-center justify-center" title="Strikethrough">
+            <Strikethrough className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={toggleBulletList} className="h-7 w-7 rounded hover:text-foreground flex items-center justify-center" title="Bulleted list">
+            <List className="h-3.5 w-3.5" />
+          </button>
           <div className="h-4 w-px bg-border" />
           <KaomojiPicker onSelect={insertKaomoji}>
             <button className="h-7 rounded px-2 text-[10px] hover:text-foreground">(◕‿◕)</button>
@@ -309,25 +328,41 @@ const Write = () => {
           suppressContentEditableWarning
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
+              // Don't intercept Enter inside a list
+              const sel = window.getSelection();
+              const node = sel?.anchorNode;
+              if (node) {
+                const parentLi = (node.nodeType === Node.ELEMENT_NODE ? node as Element : (node as Node).parentElement)?.closest("li");
+                if (parentLi) return; // let browser handle list Enter normally
+              }
               e.preventDefault();
               document.execCommand("insertLineBreak");
             }
           }}
-          onInput={updateWordCount}
+          onInput={() => {
+            updateWordCount();
+            // Prevent browser auto-creating lists from "- " or "1. " patterns
+            if (contentRef.current) {
+              contentRef.current.querySelectorAll("ul:not([data-list]), ol:not([data-list])").forEach((list) => {
+                // Browser just auto-created this list — unwrap it
+                const items = list.querySelectorAll("li");
+                const fragment = document.createDocumentFragment();
+                items.forEach((li) => {
+                  const span = document.createElement("span");
+                  span.innerHTML = li.innerHTML;
+                  fragment.appendChild(span);
+                  fragment.appendChild(document.createElement("br"));
+                });
+                list.parentNode?.replaceChild(fragment, list);
+              });
+            }
+          }}
           onPaste={(e) => {
             e.preventDefault();
             const html = e.clipboardData.getData("text/html");
             const text = e.clipboardData.getData("text/plain");
             if (html) {
-              const cleaned = html
-                .replace(/style="[^"]*"/gi, "")
-                .replace(/class="[^"]*"/gi, "")
-                .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
-                .replace(/\s*size="[^"]*"/gi, "")
-                .replace(/\s*face="[^"]*"/gi, "")
-                .replace(/\s*color="[^"]*"/gi, "")
-                .replace(/<blockquote[^>]*>/gi, "<p>")
-                .replace(/<\/blockquote>/gi, "</p>");
+              const cleaned = sanitizePastedHtml(html);
               document.execCommand("insertHTML", false, cleaned);
             } else {
               document.execCommand("insertText", false, text);
