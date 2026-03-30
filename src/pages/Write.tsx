@@ -134,7 +134,8 @@ const Write = () => {
   };
 
   const handleSave = async (isDraft: boolean) => {
-    const content = contentRef.current?.innerHTML || "";
+    const rawContent = contentRef.current?.innerHTML || "";
+    const content = normalizeHtmlContent(rawContent);
     if (!title.trim()) {
       toast.error("title is required");
       return;
