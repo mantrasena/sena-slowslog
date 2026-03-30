@@ -112,7 +112,10 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  const isTogglingList = useRef(false);
+
   const toggleBulletList = () => {
+    isTogglingList.current = true;
     document.execCommand("insertUnorderedList", false);
     // Mark the list so normalization preserves it
     if (contentRef.current) {
@@ -121,6 +124,8 @@ const Write = () => {
       });
     }
     contentRef.current?.focus();
+    // Reset flag after a tick so onInput doesn't strip our list
+    requestAnimationFrame(() => { isTogglingList.current = false; });
   };
 
   const bypassCooldown = isFounder || isAdmin;
@@ -342,7 +347,8 @@ const Write = () => {
           onInput={() => {
             updateWordCount();
             // Prevent browser auto-creating lists from "- " or "1. " patterns
-            if (contentRef.current) {
+            // Skip if we just intentionally toggled a list
+            if (contentRef.current && !isTogglingList.current) {
               contentRef.current.querySelectorAll("ul:not([data-list]), ol:not([data-list])").forEach((list) => {
                 // Browser just auto-created this list — unwrap it
                 const items = list.querySelectorAll("li");
