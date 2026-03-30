@@ -112,6 +112,17 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  const toggleBulletList = () => {
+    document.execCommand("insertUnorderedList", false);
+    // Mark the list so normalization preserves it
+    if (contentRef.current) {
+      contentRef.current.querySelectorAll("ul:not([data-list])").forEach((ul) => {
+        ul.setAttribute("data-list", "true");
+      });
+    }
+    contentRef.current?.focus();
+  };
+
   const bypassCooldown = isFounder || isAdmin;
   const isEditingPublished = !!editId && existingStory && !existingStory.is_draft;
   const canPublish = bypassCooldown || isEditingPublished || cooldown?.canPublish !== false;
