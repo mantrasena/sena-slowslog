@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import KaomojiPicker from "@/components/KaomojiPicker";
 import { normalizeHtmlContent, sanitizePastedHtml } from "@/lib/html-normalize";
+import { editorSpacingClasses, editorSpacingClassesImportant } from "@/lib/editor-content-classes";
 
 const AUTO_SAVE_INTERVAL = 30_000; // 30 seconds
 
@@ -38,11 +39,41 @@ const Write = () => {
   const currentIdRef = useRef<string | null>(editId);
   const { activeImg, hoveredImg, removeImage, clearStates, overlayRef } = useEditorImages(contentRef);
 
+  const syncSpacerBlocks = useCallback(() => {
+    if (!contentRef.current) return;
+
+    const selection = window.getSelection();
+    const activeNode = selection?.anchorNode;
+    const activeElement = activeNode
+      ? activeNode.nodeType === Node.ELEMENT_NODE
+        ? (activeNode as Element)
+        : activeNode.parentElement
+      : null;
+    const activeBlock = activeElement?.closest("p, div");
+
+    contentRef.current.querySelectorAll("p, div").forEach((block) => {
+      const el = block as HTMLElement;
+      const isEmpty = !el.textContent?.trim() && !el.querySelector("img");
+
+      if (!isEmpty) {
+        el.classList.remove("spacer");
+        return;
+      }
+
+      if (activeBlock && el === activeBlock) {
+        el.classList.remove("spacer");
+      } else {
+        el.classList.add("spacer");
+      }
+    });
+  }, []);
+
   useEffect(() => {
     if (existingStory && contentRef.current) {
       setTitle(existingStory.title);
       setSubtitle(existingStory.subtitle || "");
       contentRef.current.innerHTML = normalizeHtmlContent(existingStory.content || "");
+      syncSpacerBlocks();
       updateWordCount();
       // Track initial content to avoid unnecessary saves
       lastSavedRef.current = JSON.stringify({
@@ -51,7 +82,7 @@ const Write = () => {
         content: existingStory.content || "",
       });
     }
-  }, [existingStory]);
+  }, [existingStory, syncSpacerBlocks]);
 
   useEffect(() => {
     if (!user) navigate("/auth");
@@ -242,7 +273,7 @@ const Write = () => {
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
           <div className="my-6 h-px w-12 bg-border" />
           <div
-            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6 [&_div]:!my-2 [&_div.spacer]:!my-0 [&_div.spacer]:!h-6"
+            className={`prose prose-neutral max-w-none text-lg leading-relaxed ${editorSpacingClassesImportant}`}
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
@@ -384,6 +415,8 @@ const Write = () => {
               } else {
                 document.execCommand("insertParagraph");
               }
+
+              requestAnimationFrame(syncSpacerBlocks);
             }
           }}
           onInput={() => {
@@ -403,6 +436,8 @@ const Write = () => {
                 list.parentNode?.replaceChild(fragment, list);
               });
             }
+
+            syncSpacerBlocks();
           }}
           onPaste={(e) => {
             e.preventDefault();
@@ -415,9 +450,10 @@ const Write = () => {
               document.execCommand("insertText", false, text);
             }
             updateWordCount();
+            requestAnimationFrame(syncSpacerBlocks);
           }}
           data-placeholder="begin writing..."
-          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] [&_p]:my-2 [&_p.spacer]:my-0 [&_p.spacer]:h-6 [&_div]:my-2 [&_div.spacer]:my-0 [&_div.spacer]:h-6"
+          className={`min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] ${editorSpacingClasses}`}
         />
         <EditorImageOverlay
           activeImg={activeImg}
