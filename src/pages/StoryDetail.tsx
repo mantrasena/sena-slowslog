@@ -221,12 +221,12 @@ const StoryDetail = () => {
               </div>
             ) : (
               <div
-                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-1 [&_p.spacer]:!my-0 [&_p.spacer]:!h-4"
+                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6"
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{
                   __html: (story.content || "")
                     .replace(/style="[^"]*"/gi, "")
-                    .replace(/class="[^"]*"/gi, "")
+                    .replace(/class="(?!spacer)[^"]*"/gi, "")
                     .replace(/<font[^>]*>([\s\S]*?)<\/font>/gi, "$1")
                     .replace(/\s*size="[^"]*"/gi, "")
                     .replace(/\s*face="[^"]*"/gi, "")

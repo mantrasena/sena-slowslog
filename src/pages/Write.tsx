@@ -161,7 +161,8 @@ const Write = () => {
       if (result?.id) currentIdRef.current = result.id;
       lastSavedRef.current = JSON.stringify({ title, subtitle, content });
       toast.success(isDraft ? "draft saved (◕‿◕)" : "published! (ﾉ◕ヮ◕)ﾉ*:・ﾟ✧");
-      navigate(isDraft ? "/settings" : fromParam);
+      const storyId = currentIdRef.current || result?.id;
+      navigate(isDraft ? "/settings" : `/story/${storyId}`);
     } catch (e: any) {
       toast.error(e.message);
     }
@@ -233,7 +234,7 @@ const Write = () => {
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
           <div className="my-6 h-px w-12 bg-border" />
           <div
-            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-1 [&_p.spacer]:!my-0 [&_p.spacer]:!h-4"
+            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
