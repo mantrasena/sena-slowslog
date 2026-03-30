@@ -2,6 +2,7 @@
  * HTML Normalization Engine
  * Transforms br-based content into clean paragraph structure.
  * Also strips browser-generated list elements from dash-enter patterns.
+ * Idempotent: running on already-normalized content produces the same output.
  */
 
 export const normalizeHtmlContent = (html: string): string => {
@@ -11,7 +12,6 @@ export const normalizeHtmlContent = (html: string): string => {
   div.innerHTML = html;
 
   // Step 1: Unwrap any browser-auto-generated <ul>/<ol> that the user didn't intentionally create
-  // We keep lists that have the explicit data-list attribute (from our bullet button)
   div.querySelectorAll("ul:not([data-list]), ol:not([data-list])").forEach((list) => {
     const items = list.querySelectorAll("li");
     const fragment = document.createDocumentFragment();
@@ -38,12 +38,6 @@ export const normalizeHtmlContent = (html: string): string => {
     currentInline = [];
   };
 
-  const getOuterHTML = (node: Node): string => {
-    if (node.nodeType === Node.TEXT_NODE) return node.textContent || "";
-    if (node.nodeType === Node.ELEMENT_NODE) return (node as Element).outerHTML;
-    return "";
-  };
-
   const isBlockTag = (tag: string) =>
     /^(p|div|h[1-6]|blockquote|ul|ol|table|hr|pre|figure|section|article)$/i.test(tag);
 
@@ -54,10 +48,9 @@ export const normalizeHtmlContent = (html: string): string => {
 
   for (const node of nodes) {
     if (isBr(node)) {
-      // BR = paragraph boundary
       flushInline();
       consecutiveBr++;
-      // Double-enter (2+ consecutive BRs) → insert empty spacer paragraph
+      // Double-enter (2+ consecutive BRs) → insert spacer paragraph
       if (consecutiveBr >= 2) {
         result.push(`<p class="spacer"><br></p>`);
       }
@@ -74,24 +67,48 @@ export const normalizeHtmlContent = (html: string): string => {
         flushInline();
 
         if (tag === "div") {
-          // Div might contain mixed content — recurse
           const inner = normalizeHtmlContent(el.innerHTML);
           if (inner.trim()) result.push(inner);
         } else if (tag === "p") {
-          // Clean BRs inside paragraphs — split into multiple paragraphs
+          // Check if this is already a spacer paragraph — preserve it
+          if (el.classList.contains("spacer")) {
+            result.push(`<p class="spacer"><br></p>`);
+            continue;
+          }
+
           const innerHtml = el.innerHTML;
+          // Check if paragraph is empty (only whitespace or <br>)
+          const textOnly = el.textContent?.trim() || "";
+          const hasOnlyBr = /^(<br\s*\/?>|\s)*$/i.test(innerHtml);
+
+          if (hasOnlyBr && !textOnly) {
+            // Empty paragraph — could be a spacer from legacy content
+            // Single empty <p> between content = normal break (skip, paragraph gap handles it)
+            // We don't add it as spacer here since single Enter already creates paragraph gap
+            continue;
+          }
+
           if (innerHtml.includes("<br")) {
+            // Split paragraph at <br> tags
             const parts = innerHtml.split(/<br\s*\/?>/gi);
+            let emptyCount = 0;
             for (const part of parts) {
               const trimmed = part.trim();
-              if (trimmed) result.push(`<p>${trimmed}</p>`);
+              if (trimmed) {
+                emptyCount = 0;
+                result.push(`<p>${trimmed}</p>`);
+              } else {
+                emptyCount++;
+                if (emptyCount >= 1) {
+                  result.push(`<p class="spacer"><br></p>`);
+                }
+              }
             }
           } else {
             const trimmed = el.innerHTML.trim();
             if (trimmed) result.push(`<p>${trimmed}</p>`);
           }
         } else if (tag === "ul" || tag === "ol") {
-          // Intentional list (has data-list) — keep as-is
           result.push(el.outerHTML);
         } else {
           const trimmed = el.innerHTML.trim();
@@ -100,7 +117,7 @@ export const normalizeHtmlContent = (html: string): string => {
         continue;
       }
 
-      // Inline element (strong, em, a, span, img, etc.)
+      // Inline element
       if (tag === "img") {
         flushInline();
         result.push(el.outerHTML);
@@ -116,7 +133,6 @@ export const normalizeHtmlContent = (html: string): string => {
       if (text.trim()) {
         currentInline.push(text);
       } else if (currentInline.length > 0) {
-        // preserve spaces between inline elements
         currentInline.push(" ");
       }
       continue;

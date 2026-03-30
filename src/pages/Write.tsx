@@ -380,7 +380,7 @@ const Write = () => {
             updateWordCount();
           }}
           data-placeholder="begin writing..."
-          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit]"
+          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] [&_p]:my-2 [&_p.spacer]:my-0 [&_p.spacer]:h-6"
         />
         <EditorImageOverlay
           activeImg={activeImg}
