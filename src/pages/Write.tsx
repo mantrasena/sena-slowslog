@@ -167,9 +167,11 @@ const Write = () => {
     }
   };
 
-  const insertKaomoji = (k: string) => {
+  const insertKaomoji = (_k: string) => {
+    // Kaomoji picker now copies to clipboard; user pastes manually
+    // This callback is kept as fallback for clipboard API failure
     contentRef.current?.focus();
-    document.execCommand("insertText", false, k);
+    document.execCommand("insertText", false, _k);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
