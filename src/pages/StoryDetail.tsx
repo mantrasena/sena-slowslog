@@ -112,7 +112,7 @@ const StoryDetail = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}`)} className="gap-2 cursor-pointer">
+                    <DropdownMenuItem onClick={() => navigate(`/write?edit=${story.id}&from=/story/${story.id}`)} className="gap-2 cursor-pointer">
                       <Pencil className="h-4 w-4" /> Edit article
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handlePin} className="gap-2 cursor-pointer">
