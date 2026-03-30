@@ -23,6 +23,7 @@ const Write = () => {
   const { data: existingStory } = useStory(editId || undefined);
   const { data: cooldown } = usePublishCooldown();
 
+  const fromParam = searchParams.get("from") || "/";
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const contentRef = useRef<HTMLDivElement>(null);
