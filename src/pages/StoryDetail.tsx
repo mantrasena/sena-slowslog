@@ -13,6 +13,7 @@ import { useHighFiveCount, useHasHighFived, useToggleHighFive } from "@/hooks/us
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { editorSpacingClassesImportant } from "@/lib/editor-content-classes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -221,7 +222,7 @@ const StoryDetail = () => {
               </div>
             ) : (
               <div
-                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-2 [&_p.spacer]:!my-0 [&_p.spacer]:!h-6 [&_div]:!my-2 [&_div.spacer]:!my-0 [&_div.spacer]:!h-6"
+                className={`prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] ${editorSpacingClassesImportant}`}
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{
                   __html: (story.content || "")
