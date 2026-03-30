@@ -221,7 +221,7 @@ const StoryDetail = () => {
               </div>
             ) : (
               <div
-                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit]"
+                className="prose prose-neutral max-w-none leading-relaxed text-muted-foreground [&_*]:!bg-transparent [&_*]:!text-inherit [&_span]:!text-inherit [&_div]:!text-inherit [&_p]:!text-inherit [&_*]:!font-[inherit] [&_p]:!my-1"
                 style={{ fontSize: `${fontSize}px` }}
                 dangerouslySetInnerHTML={{
                   __html: (story.content || "")
