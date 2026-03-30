@@ -233,7 +233,7 @@ const Write = () => {
           {subtitle && <p className="mt-2 text-muted-foreground">{subtitle}</p>}
           <div className="my-6 h-px w-12 bg-border" />
           <div
-            className="prose prose-neutral max-w-none text-lg leading-relaxed"
+            className="prose prose-neutral max-w-none text-lg leading-relaxed [&_p]:!my-1 [&_p.spacer]:!my-0 [&_p.spacer]:!h-4"
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </main>
