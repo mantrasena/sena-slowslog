@@ -82,27 +82,31 @@ export const normalizeHtmlContent = (html: string): string => {
           const hasOnlyBr = /^(<br\s*\/?>|\s)*$/i.test(innerHtml);
 
           if (hasOnlyBr && !textOnly) {
-            // Empty paragraph — could be a spacer from legacy content
-            // Single empty <p> between content = normal break (skip, paragraph gap handles it)
-            // We don't add it as spacer here since single Enter already creates paragraph gap
+            // Empty paragraph between text blocks is a visual spacer in the editor.
+            // Preserve it so write/preview/publish stay identical.
+            result.push(`<p class="spacer"><br></p>`);
             continue;
           }
 
           if (innerHtml.includes("<br")) {
             // Split paragraph at <br> tags
             const parts = innerHtml.split(/<br\s*\/?>/gi);
-            let emptyCount = 0;
+            let pendingSpacer = false;
             for (const part of parts) {
               const trimmed = part.trim();
               if (trimmed) {
-                emptyCount = 0;
+                if (pendingSpacer) {
+                  result.push(`<p class="spacer"><br></p>`);
+                  pendingSpacer = false;
+                }
                 result.push(`<p>${trimmed}</p>`);
               } else {
-                emptyCount++;
-                if (emptyCount >= 1) {
-                  result.push(`<p class="spacer"><br></p>`);
-                }
+                pendingSpacer = true;
               }
+            }
+
+            if (pendingSpacer) {
+              result.push(`<p class="spacer"><br></p>`);
             }
           } else {
             const trimmed = el.innerHTML.trim();
