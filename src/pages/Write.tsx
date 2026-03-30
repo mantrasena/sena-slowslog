@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Eye, ImageIcon, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, ImageIcon, Loader2, Strikethrough, List } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveStory, useStory } from "@/hooks/useStories";
 import { usePublishCooldown } from "@/hooks/usePublishCooldown";
