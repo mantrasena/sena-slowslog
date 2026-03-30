@@ -112,7 +112,10 @@ const Write = () => {
     contentRef.current?.focus();
   };
 
+  const isTogglingList = useRef(false);
+
   const toggleBulletList = () => {
+    isTogglingList.current = true;
     document.execCommand("insertUnorderedList", false);
     // Mark the list so normalization preserves it
     if (contentRef.current) {
@@ -121,6 +124,8 @@ const Write = () => {
       });
     }
     contentRef.current?.focus();
+    // Reset flag after a tick so onInput doesn't strip our list
+    requestAnimationFrame(() => { isTogglingList.current = false; });
   };
 
   const bypassCooldown = isFounder || isAdmin;
