@@ -337,15 +337,38 @@ const Write = () => {
           suppressContentEditableWarning
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-              // Don't intercept Enter inside a list
               const sel = window.getSelection();
               const node = sel?.anchorNode;
+              // Don't intercept Enter inside a list
               if (node) {
                 const parentLi = (node.nodeType === Node.ELEMENT_NODE ? node as Element : (node as Node).parentElement)?.closest("li");
-                if (parentLi) return; // let browser handle list Enter normally
+                if (parentLi) return;
               }
+
               e.preventDefault();
-              document.execCommand("insertLineBreak");
+
+              // Detect if current block is empty → double-Enter = spacer
+              const currentBlock = node?.nodeType === Node.ELEMENT_NODE
+                ? (node as Element)
+                : node?.parentElement;
+              const closestP = currentBlock?.closest("p, div[contenteditable]");
+              const isEmptyBlock = closestP && closestP !== contentRef.current &&
+                (!closestP.textContent?.trim()) && !closestP.querySelector("img");
+
+              if (isEmptyBlock && closestP) {
+                closestP.classList.add("spacer");
+                closestP.innerHTML = "<br>";
+                const newP = document.createElement("p");
+                newP.innerHTML = "<br>";
+                closestP.insertAdjacentElement("afterend", newP);
+                const range = document.createRange();
+                range.setStart(newP, 0);
+                range.collapse(true);
+                sel?.removeAllRanges();
+                sel?.addRange(range);
+              } else {
+                document.execCommand("insertParagraph");
+              }
             }
           }}
           onInput={() => {
@@ -380,7 +403,7 @@ const Write = () => {
             updateWordCount();
           }}
           data-placeholder="begin writing..."
-          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit]"
+          className="min-h-[300px] text-lg leading-relaxed focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground/30 [&_*]:!text-[length:inherit] [&_*]:!font-[inherit] [&_p]:my-2 [&_p.spacer]:my-0 [&_p.spacer]:h-6"
         />
         <EditorImageOverlay
           activeImg={activeImg}
