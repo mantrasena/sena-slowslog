@@ -673,6 +673,7 @@ const Admin = () => {
                 </div>
 
                 <VoucherManager />
+                <InviteCodeManager />
               </div>
             </TabsContent>
           </Tabs>
