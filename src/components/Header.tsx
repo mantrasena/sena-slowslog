@@ -60,7 +60,7 @@ const Header = () => {
                   <PenLine className="h-4 w-4" /> Write
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate(`/profile/${profile?.username}`)} className="gap-2.5 cursor-pointer py-2.5">
+                <DropdownMenuItem onClick={() => navigate(`/@${profile?.username}`)} className="gap-2.5 cursor-pointer py-2.5">
                   <User className="h-4 w-4" /> Profile
                   {isInnerCircle && (
                     <BadgeCheck className="ml-auto h-4 w-4 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />

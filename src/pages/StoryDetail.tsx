@@ -293,7 +293,7 @@ const StoryDetail = () => {
             {story.author && (
               <div className="pb-8">
                 <Link
-                  to={`/profile/${story.author.username}`}
+                  to={`/@${story.author.username}`}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   More from {story.author.display_name} →
