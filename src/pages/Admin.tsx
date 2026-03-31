@@ -106,6 +106,49 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
   return stories;
 };
 
+const InviteRequiredToggle = () => {
+  const { data: inviteRequired, refetch } = useQuery({
+    queryKey: ["site-settings", "invite_required"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "invite_required")
+        .single();
+      return (data?.value as any)?.enabled ?? true;
+    },
+  });
+
+  const toggle = async () => {
+    const newValue = !inviteRequired;
+    await supabase
+      .from("site_settings")
+      .update({ value: { enabled: newValue }, updated_at: new Date().toISOString() })
+      .eq("key", "invite_required");
+    refetch();
+    toast.success(newValue ? "Invite code required for new users" : "Invite code disabled — anyone can join");
+  };
+
+  return (
+    <div className="rounded-lg border border-border p-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <Users className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="text-sm font-medium">Require Invite Code</h3>
+            <p className="text-xs text-muted-foreground">
+              {inviteRequired ? "New users need an invite code to join" : "Anyone can sign in freely"}
+            </p>
+          </div>
+        </div>
+        <Switch checked={inviteRequired ?? true} onCheckedChange={toggle} />
+      </div>
+    </div>
+  );
+};
+
 const Admin = () => {
   const navigate = useNavigate();
   const { isFounder, isAdmin, loading } = useAuth();
