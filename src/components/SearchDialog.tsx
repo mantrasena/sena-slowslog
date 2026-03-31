@@ -88,7 +88,7 @@ const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
         {users.length > 0 && (
           <CommandGroup heading="Users">
             {users.map((u) => (
-              <CommandItem key={u.username} onSelect={() => select(`/profile/${u.username}`)} className="cursor-pointer gap-2">
+              <CommandItem key={u.username} onSelect={() => select(`/@${u.username}`)} className="cursor-pointer gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm">{u.display_name}</p>

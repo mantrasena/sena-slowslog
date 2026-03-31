@@ -33,7 +33,7 @@ const StoryCard = ({ story, showPinned }: StoryCardProps) => {
         {story.author && (
           <>
             <Link
-              to={`/profile/${story.author.username}`}
+              to={`/@${story.author.username}`}
               className="text-foreground/70 hover:text-foreground transition-colors"
               onClick={(e) => e.stopPropagation()}
             >

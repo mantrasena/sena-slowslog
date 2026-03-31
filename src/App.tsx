@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
@@ -18,6 +18,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const ProfileRedirect = () => {
+  const { username } = useParams();
+  return <Navigate to={`/@${username}`} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -27,7 +32,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/@:username" element={<Profile />} />
+            <Route path="/profile/:username" element={<ProfileRedirect />} />
             <Route path="/write" element={<Write />} />
             <Route path="/story/:id" element={<StoryDetail />} />
             
