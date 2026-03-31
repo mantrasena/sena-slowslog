@@ -652,6 +652,8 @@ const Admin = () => {
             {/* Settings Tab */}
             <TabsContent value="settings" className="mt-4">
               <div className="space-y-6">
+                <InviteRequiredToggle />
+
                 <div className="rounded-lg border border-border p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
