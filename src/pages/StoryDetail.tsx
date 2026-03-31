@@ -180,6 +180,22 @@ const StoryDetail = () => {
           </div>
 
           <article className="mt-10">
+            {isInnerCircleStory && (
+              <div className="mb-4">
+                {isInnerCircleEnabled ? (
+                  <Link
+                    to="/inner-circle"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(45,90%,50%)]/30 bg-[hsl(45,90%,50%)]/5 px-3 py-1 text-xs font-medium text-[hsl(45,90%,50%)] transition-colors hover:bg-[hsl(45,90%,50%)]/10"
+                  >
+                    <BadgeCheck className="h-3.5 w-3.5" /> Inner Circle only
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[hsl(45,90%,50%)]/30 bg-[hsl(45,90%,50%)]/5 px-3 py-1 text-xs font-medium text-[hsl(45,90%,50%)] cursor-default">
+                    <BadgeCheck className="h-3.5 w-3.5" /> Inner Circle only
+                  </span>
+                )}
+              </div>
+            )}
             <h1 className="font-serif text-3xl font-medium tracking-tight">{story.title}</h1>
             {story.subtitle && <p className="mt-3 text-xl leading-relaxed text-muted-foreground">{story.subtitle}</p>}
 
