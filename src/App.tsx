@@ -24,6 +24,7 @@ const ProfileRedirect = () => {
 };
 
 const App = () => (
+
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
@@ -32,7 +33,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/@:username" element={<Profile />} />
+            <Route path="/:username" element={<Profile />} />
             <Route path="/profile/:username" element={<ProfileRedirect />} />
             <Route path="/write" element={<Write />} />
             <Route path="/story/:id" element={<StoryDetail />} />
