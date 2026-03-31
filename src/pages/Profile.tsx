@@ -18,8 +18,7 @@ import type { Role } from "@/lib/types";
 import type { UserStats } from "@/lib/achievements";
 
 const Profile = () => {
-  const { username: rawUsername } = useParams();
-  const username = rawUsername?.startsWith("@") ? rawUsername.slice(1) : rawUsername;
+  const { username } = useParams();
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
 

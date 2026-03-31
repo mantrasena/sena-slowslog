@@ -117,33 +117,6 @@ export type Database = {
         }
         Relationships: []
       }
-      invite_codes: {
-        Row: {
-          code: string
-          created_at: string
-          id: string
-          is_active: boolean
-          max_uses: number | null
-          used_count: number
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          max_uses?: number | null
-          used_count?: number
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          max_uses?: number | null
-          used_count?: number
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -371,7 +344,6 @@ export type Database = {
             }
             Returns: undefined
           }
-      use_invite_code: { Args: { p_code: string }; Returns: boolean }
     }
     Enums: {
       app_role:
