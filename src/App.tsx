@@ -9,7 +9,6 @@ import Write from "./pages/Write";
 import StoryDetail from "./pages/StoryDetail";
 
 import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Bookmarks from "./pages/Bookmarks";
@@ -39,7 +38,7 @@ const App = () => (
             <Route path="/write" element={<Write />} />
             <Route path="/story/:id" element={<StoryDetail />} />
             
-            <Route path="/reset-password" element={<ResetPassword />} />
+            
             <Route path="/admin" element={<Admin />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/bookmarks" element={<Bookmarks />} />
