@@ -1,44 +1,28 @@
 
 
-# Fix: Paragraph-Based Editor (Medium/Blogger Style)
+# Implementasi Route `/@username`
 
-## Root Cause
+## Perubahan
 
-The editor currently uses `insertLineBreak` (creates `<br>` tags), then the normalizer converts `<br>` to `<p>` for storage. But when re-editing, the `<p>` structure doesn't convert back to visual breaks — causing inconsistency across the write → publish → re-edit cycle.
+### 1. `src/App.tsx` — Tambah route baru + redirect lama
+- Tambah `<Route path="/@:username" element={<Profile />} />`
+- Ubah route lama `/profile/:username` menjadi redirect ke `/@:username` agar link lama tetap berfungsi
 
-## Solution
+### 2. Update semua link internal ke format `/@username`
+File yang perlu diubah (5 file, 5 lokasi):
 
-Switch the editor to work **natively with `<p>` blocks**, like Medium and Blogger. Every line is a `<p>`, and double-Enter creates `<p class="spacer"><br></p>`.
+| File | Perubahan |
+|------|-----------|
+| `src/components/StoryCard.tsx` | `/profile/${username}` → `/@${username}` |
+| `src/components/Header.tsx` | `/profile/${username}` → `/@${username}` |
+| `src/pages/StoryDetail.tsx` | 2 link `/profile/` → `/@` |
+| `src/components/SearchDialog.tsx` | `/profile/${username}` → `/@${username}` |
 
-## Changes
+### 3. `src/pages/Profile.tsx` — Tidak perlu diubah
+`useParams()` tetap mengembalikan `username` dengan benar karena `@` adalah bagian dari path prefix, bukan parameter.
 
-### 1. `src/pages/Write.tsx` — Editor behavior
-
-- **Remove** the `onKeyDown` handler that intercepts Enter and calls `insertLineBreak`
-- **Replace** with a handler that uses `insertParagraph` (browser-native `<p>` creation)
-- On double-Enter (detect empty current paragraph), insert a `<p class="spacer"><br></p>` spacer
-- On initial load of existing story content: ensure content is already `<p>`-based (it is, from normalizer), so it loads correctly
-- Add CSS to the contentEditable div for consistent `<p>` spacing: `[&_p]:my-0` base spacing + spacer height
-
-### 2. `src/lib/html-normalize.ts` — Normalizer adjustments
-
-- Keep the existing logic for converting stray `<br>` and text nodes into `<p>` blocks (handles legacy/pasted content)
-- Fix the `<p>` handler (line 80-92): when a `<p>` contains `<br>`, split correctly but also **preserve empty splits as spacer paragraphs** instead of discarding them
-- Ensure idempotency: running normalizer on already-normalized content should produce the same output
-
-### 3. `src/pages/StoryDetail.tsx` — Published view
-
-- Keep existing `[&_p]:!my-2` and `[&_p.spacer]` styles (already correct)
-- No changes needed if normalizer output is consistent
-
-### 4. Preview in `Write.tsx`
-
-- Same prose styles as StoryDetail for consistency
-
-## Result
-
-- **Single Enter** → new `<p>` (normal paragraph break)
-- **Double Enter** → `<p class="spacer"><br></p>` (visible gap)
-- **Storage** → clean `<p>` HTML, consistent across save/load cycles
-- **Re-edit** → content loads exactly as written, no lost spacing
+## Dampak
+- URL lama (`/profile/mantra`) otomatis redirect ke `/@mantra`
+- Tidak ada perubahan database atau query
+- Semua link internal langsung menggunakan format baru
 
