@@ -9,7 +9,6 @@ import Write from "./pages/Write";
 import StoryDetail from "./pages/StoryDetail";
 
 import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
 import Bookmarks from "./pages/Bookmarks";
