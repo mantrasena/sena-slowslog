@@ -24,6 +24,7 @@ const ProfileRedirect = () => {
 };
 
 const App = () => (
+
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
