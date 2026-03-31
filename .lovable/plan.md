@@ -1,54 +1,51 @@
 
 
-## Plan: Invite-Only Registration
-
-### Masalah
-Siapa pun bisa mendaftar dengan email asal-asalan dan langsung masuk. Kamu ingin registrasi hanya untuk orang yang punya kode undangan.
-
-### Pendekatan
-Buat sistem **invite code** terpisah dari voucher (yang sudah dipakai untuk diskon Inner Circle). Admin/Founder bisa membuat invite code dari dashboard, dan user wajib memasukkan kode saat sign up.
+## Plan: Google Sign-In Only + Toggleable Invite Code
 
 ### Perubahan
 
-**1. Database — tabel baru `invite_codes`**
-- Kolom: `id`, `code` (unique), `max_uses`, `used_count`, `is_active`, `created_at`
-- RLS: readable oleh semua (untuk validasi saat signup), manageable oleh admin/founder
-- Fungsi SQL `use_invite_code(p_code text)` — validasi kode aktif, belum penuh, lalu increment `used_count`. Return boolean.
+**1. Database migration**
+- Update trigger `handle_new_user` untuk ambil `avatar_url` dan `full_name` dari Google metadata (`raw_user_meta_data->>'avatar_url'`, `raw_user_meta_data->>'full_name'`)
+- Insert default site setting `invite_required` = `{ "enabled": true }`
 
-**2. Auth page (`src/pages/Auth.tsx`)**
-- Tambah field **"invite code"** di form sign up (required)
-- Sebelum memanggil `supabase.auth.signUp`, panggil RPC `use_invite_code` untuk validasi
-- Jika kode tidak valid → tampilkan error, batalkan signup
-- Jika valid → lanjut signup seperti biasa
-- Pesan sukses diganti: "account created (◕‿◕)" + auto-login + redirect ke home (sesuai plan sebelumnya)
+**2. `src/pages/Auth.tsx` — tulis ulang total**
+- Hapus semua form email/password, forgot password, invite code di signup
+- Tampilkan satu tombol "Sign in with Google" via `lovable.auth.signInWithOAuth("google")`
+- Setelah Google sign-in berhasil, cek apakah user baru (profile belum ada) DAN invite mode ON:
+  - Jika ya → tampilkan input invite code, validasi via RPC `use_invite_code`
+  - Jika tidak → redirect ke home
+- State management: `needsInviteCode` boolean untuk toggle antara Google button dan invite code input
 
-**3. Admin dashboard — tab/section Invite Codes**
-- Komponen baru `InviteCodeManager.tsx` di halaman Admin
-- Fitur: generate kode (format `SENA-XXXXXX`), set max uses, toggle aktif/nonaktif, hapus, copy kode
-- UI mirip VoucherManager yang sudah ada
+**3. `src/App.tsx`**
+- Hapus route `/reset-password`
+- Hapus import `ResetPassword`
 
-**4. Forgot password flow** (dari plan sebelumnya, tetap diimplementasi)
-- Link "forgot password?" di halaman Auth
-- Halaman baru `/reset-password` untuk set password baru
-- Route baru di `App.tsx`
+**4. Hapus `src/pages/ResetPassword.tsx`**
 
-### Alur User
+**5. `src/pages/Admin.tsx` — tambah toggle "Require Invite Code"**
+- Di Settings tab, tambah card baru dengan Switch untuk toggle `invite_required` setting
+- Query dan update ke `site_settings` table, pattern sama seperti `inner_circle_enabled` toggle yang sudah ada
+- Letakkan di atas `InviteCodeManager` supaya kontekstual
+
+### Alur
+
 ```text
-User buka /auth → pilih "sign up"
-  → isi invite code, username, email, password
-  → klik "create account"
-  → sistem validasi kode via RPC
-  → jika invalid: "invalid or expired invite code"
-  → jika valid: signup + auto-login → redirect ke home
+User → /auth → "Sign in with Google" button
+  → Google OAuth redirect → callback
+  → Cek profile exists?
+    → YES (returning user) → redirect /
+    → NO (new user) → cek invite_required setting
+      → ON  → tampilkan invite code input → validasi → redirect /
+      → OFF → redirect /
 ```
 
-### File yang berubah/dibuat
+### File
+
 | File | Aksi |
 |------|------|
-| Migration SQL | Tabel `invite_codes` + fungsi `use_invite_code` |
-| `src/pages/Auth.tsx` | Tambah field invite code, auto-login, forgot password link |
-| `src/pages/ResetPassword.tsx` | Baru — form reset password |
-| `src/components/admin/InviteCodeManager.tsx` | Baru — kelola invite codes |
-| `src/pages/Admin.tsx` | Tambah tab/section invite codes |
-| `src/App.tsx` | Tambah route `/reset-password` |
+| Migration SQL | Update trigger + insert `invite_required` setting |
+| `src/pages/Auth.tsx` | Tulis ulang — Google only + conditional invite |
+| `src/pages/ResetPassword.tsx` | Hapus |
+| `src/App.tsx` | Hapus route reset-password |
+| `src/pages/Admin.tsx` | Tambah toggle invite_required di Settings |
 
