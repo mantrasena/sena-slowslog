@@ -202,7 +202,7 @@ const StoryDetail = () => {
             <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
               {story.author && (
                 <>
-                  <Link to={`/profile/${story.author.username}`} className="text-foreground/70 hover:text-foreground transition-colors">{story.author.display_name}</Link>
+                  <Link to={`/@${story.author.username}`} className="text-foreground/70 hover:text-foreground transition-colors">{story.author.display_name}</Link>
                   <RoleBadge role={story.author.role} />
                   <span>·</span>
                 </>
