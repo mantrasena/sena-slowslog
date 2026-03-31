@@ -11,8 +11,12 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,7 +30,18 @@ const Auth = () => {
         navigate("/");
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      // Validate invite code first
+      const { data: codeValid, error: rpcError } = await supabase.rpc("use_invite_code", {
+        p_code: inviteCode,
+      });
+
+      if (rpcError || !codeValid) {
+        toast.error("invalid or expired invite code (◕︿◕)");
+        setLoading(false);
+        return;
+      }
+
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -34,13 +49,43 @@ const Auth = () => {
           emailRedirectTo: window.location.origin,
         },
       });
+
       if (error) {
         toast.error(error.message);
+      } else if (signUpData.session) {
+        // Auto-confirmed, already logged in
+        toast.success("account created (◕‿◕)");
+        navigate("/");
       } else {
-        toast.success("Check your email to confirm (◕‿◕)");
+        // Fallback: auto-login
+        const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+        if (loginError) {
+          toast.success("account created — please sign in (◕‿◕)");
+          setIsLogin(true);
+        } else {
+          toast.success("account created (◕‿◕)");
+          navigate("/");
+        }
       }
     }
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("reset link sent — check your email (◕‿◕)");
+      setShowForgot(false);
+      setForgotEmail("");
+    }
+    setForgotLoading(false);
   };
 
   return (
@@ -51,7 +96,7 @@ const Auth = () => {
             {isLogin ? "welcome back" : "join sena"}
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            {isLogin ? "sign in to continue (◕‿◕)" : "start your slow blog (◕‿◕)"}
+            {isLogin ? "sign in to continue (◕‿◕)" : "invite only — enter your code (◕‿◕)"}
           </p>
         </div>
 
@@ -60,10 +105,19 @@ const Auth = () => {
             <>
               <input
                 type="text"
+                placeholder="invite code"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                required
+                className="w-full border-b border-border bg-transparent py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
+              />
+              <input
+                type="text"
                 placeholder="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                minLength={3}
                 className="w-full border-b border-border bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
               />
               <input
@@ -112,13 +166,41 @@ const Auth = () => {
           </button>
         </form>
 
+        {isLogin && (
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowForgot(!showForgot)}
+              className="text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground transition-opacity"
+            >
+              forgot password?
+            </button>
+          </div>
+        )}
 
-
+        {showForgot && (
+          <form onSubmit={handleForgotPassword} className="mt-4 space-y-3">
+            <input
+              type="email"
+              placeholder="your email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              required
+              className="w-full border-b border-border bg-transparent py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-foreground focus:outline-none transition-colors"
+            />
+            <button
+              type="submit"
+              disabled={forgotLoading}
+              className="w-full border border-foreground bg-transparent py-2 text-sm font-medium text-foreground transition-opacity hover:opacity-70 disabled:opacity-40"
+            >
+              {forgotLoading ? "..." : "send reset link"}
+            </button>
+          </form>
+        )}
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
           {isLogin ? "no account? " : "have an account? "}
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => { setIsLogin(!isLogin); setShowForgot(false); }}
             className="text-foreground underline underline-offset-4 hover:opacity-70 transition-opacity"
           >
             {isLogin ? "sign up" : "sign in"}
