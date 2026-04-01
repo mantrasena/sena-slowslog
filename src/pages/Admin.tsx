@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar } from "lucide-react";
+import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
@@ -63,6 +63,84 @@ interface ICOrder {
   username?: string;
   display_name?: string;
 }
+
+const ITEMS_PER_PAGE = 20;
+
+const getMonthYearKey = (dateStr: string | null) => {
+  if (!dateStr) return "Unknown";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "Unknown";
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
+
+const groupByMonth = <T,>(items: T[], dateKey: keyof T): { label: string; items: T[] }[] => {
+  const groups = new Map<string, T[]>();
+  items.forEach((item) => {
+    const key = getMonthYearKey(item[dateKey] as string | null);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  });
+  return Array.from(groups.entries()).map(([label, items]) => ({ label, items }));
+};
+
+const SimplePagination = ({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+}) => {
+  if (totalPages <= 1) return null;
+
+  const pages: number[] = [];
+  const start = Math.max(1, page - 2);
+  const end = Math.min(totalPages, page + 2);
+  for (let i = start; i <= end; i++) pages.push(i);
+
+  return (
+    <div className="flex items-center justify-center gap-1 pt-6 pb-2">
+      <button
+        onClick={() => onPageChange(page - 1)}
+        disabled={page === 1}
+        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </button>
+      {start > 1 && (
+        <>
+          <button onClick={() => onPageChange(1)} className="flex h-8 w-8 items-center justify-center rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">1</button>
+          {start > 2 && <span className="text-xs text-muted-foreground px-1">…</span>}
+        </>
+      )}
+      {pages.map((p) => (
+        <button
+          key={p}
+          onClick={() => onPageChange(p)}
+          className={`flex h-8 w-8 items-center justify-center rounded-md text-xs transition-colors ${
+            p === page ? "bg-foreground text-background font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          {p}
+        </button>
+      ))}
+      {end < totalPages && (
+        <>
+          {end < totalPages - 1 && <span className="text-xs text-muted-foreground px-1">…</span>}
+          <button onClick={() => onPageChange(totalPages)} className="flex h-8 w-8 items-center justify-center rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">{totalPages}</button>
+        </>
+      )}
+      <button
+        onClick={() => onPageChange(page + 1)}
+        disabled={page === totalPages}
+        className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+};
 
 const getDateFilterOptions = () => {
   const now = new Date();
@@ -117,6 +195,11 @@ const Admin = () => {
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
+
+  // Pagination states
+  const [userPage, setUserPage] = useState(1);
+  const [orderPage, setOrderPage] = useState(1);
+  const [storyPage, setStoryPage] = useState(1);
 
   // IC Orders state
   const [orders, setOrders] = useState<ICOrder[]>([]);
@@ -281,6 +364,24 @@ const Admin = () => {
     return result;
   }, [orders, orderStatusFilter, orderSearch]);
 
+  // Paginated + grouped data
+  const userTotalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const paginatedUsers = filteredUsers.slice((userPage - 1) * ITEMS_PER_PAGE, userPage * ITEMS_PER_PAGE);
+  const groupedUsers = groupByMonth(paginatedUsers, "joined_at");
+
+  const orderTotalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
+  const paginatedOrders = filteredOrders.slice((orderPage - 1) * ITEMS_PER_PAGE, orderPage * ITEMS_PER_PAGE);
+  const groupedOrders = groupByMonth(paginatedOrders, "created_at");
+
+  const storyTotalPages = Math.max(1, Math.ceil(filteredStories.length / ITEMS_PER_PAGE));
+  const paginatedStories = filteredStories.slice((storyPage - 1) * ITEMS_PER_PAGE, storyPage * ITEMS_PER_PAGE);
+  const groupedStories = groupByMonth(paginatedStories, "published_at");
+
+  // Reset page when filters change
+  useEffect(() => { setUserPage(1); }, [userSearch]);
+  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter]);
+  useEffect(() => { setStoryPage(1); }, [storySearch, storyUserFilter, dateFilter]);
+
   const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
 
   const changeRole = async (userId: string, newRole: Role) => {
@@ -319,9 +420,7 @@ const Admin = () => {
   };
 
   const approveOrder = async (order: ICOrder) => {
-    // Update order status
     await supabase.from("ic_orders").update({ status: "approved", updated_at: new Date().toISOString() } as any).eq("id", order.id);
-    // Grant IC role
     const { data: existingRole } = await supabase.from("user_roles").select("*").eq("user_id", order.user_id).eq("role", "inner_circle");
     if (!existingRole?.length) {
       await supabase.from("user_roles").insert({ user_id: order.user_id, role: "inner_circle" as any });
@@ -417,62 +516,72 @@ const Admin = () => {
                     className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
                   />
                 </div>
-                {userSearch && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {filteredUsers.length} result(s)
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {filteredUsers.length} user(s) · page {userPage}/{userTotalPages}
                   </p>
-                )}
+                </div>
               </div>
-              <div className="divide-y divide-border">
-                {filteredUsers.map((u) => (
-                  <div key={u.user_id} className="flex items-center justify-between py-3 gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                        {u.display_name[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium truncate">{u.display_name}</p>
-                          {u.hasInnerCircle && <VerifiedBadge size="sm" />}
-                          <RoleBadge role={u.role} variant="card" />
-                        </div>
-                        <p className="text-xs text-muted-foreground">@{u.username}</p>
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          <input
-                            type="date"
-                            defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
-                            onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
-                            className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
-                            title="Change join date"
-                          />
-                        </div>
-                      </div>
+
+              <div>
+                {groupedUsers.map((group) => (
+                  <div key={group.label}>
+                    <div className="sticky top-0 z-10 bg-background border-b border-border py-2 px-1 mb-1">
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
-                        className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
-                          u.hasInnerCircle
-                            ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                            : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
-                        }`}
-                        title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
-                      >
-                        <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
-                        {u.hasInnerCircle ? "IC" : "IC"}
-                      </button>
-                      <select
-                        value={u.role}
-                        onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
-                        className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
-                      >
-                        {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
-                          .filter((r) => isFounder || r !== "founder")
-                          .map((r) => (
-                            <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                          ))}
-                      </select>
+                    <div className="divide-y divide-border">
+                      {group.items.map((u) => (
+                        <div key={u.user_id} className="flex items-center justify-between py-3 gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                              {u.display_name[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium truncate">{u.display_name}</p>
+                                {u.hasInnerCircle && <VerifiedBadge size="sm" />}
+                                <RoleBadge role={u.role} variant="card" />
+                              </div>
+                              <p className="text-xs text-muted-foreground">@{u.username}</p>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <Calendar className="h-3 w-3 text-muted-foreground" />
+                                <input
+                                  type="date"
+                                  defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
+                                  onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
+                                  className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
+                                  title="Change join date"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
+                              className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
+                                u.hasInnerCircle
+                                  ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                  : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
+                              }`}
+                              title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
+                            >
+                              <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
+                              {u.hasInnerCircle ? "IC" : "IC"}
+                            </button>
+                            <select
+                              value={u.role}
+                              onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
+                              className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
+                            >
+                              {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
+                                .filter((r) => isFounder || r !== "founder")
+                                .map((r) => (
+                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                ))}
+                            </select>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -480,6 +589,8 @@ const Admin = () => {
                   <p className="py-8 text-center text-sm text-muted-foreground">no users found (◕︿◕)</p>
                 )}
               </div>
+
+              <SimplePagination page={userPage} totalPages={userTotalPages} onPageChange={setUserPage} />
             </TabsContent>
 
             {/* IC Orders Tab */}
@@ -507,70 +618,85 @@ const Admin = () => {
                 </select>
               </div>
 
-              <div className="divide-y divide-border rounded-md border border-border">
-                {filteredOrders.length === 0 ? (
+              <p className="mb-3 text-xs text-muted-foreground">
+                {filteredOrders.length} order(s) · page {orderPage}/{orderTotalPages}
+              </p>
+
+              <div className="rounded-md border border-border">
+                {paginatedOrders.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no orders yet (◕ᴗ◕✿)</p>
                 ) : (
-                  filteredOrders.map((o) => (
-                    <div key={o.id} className="px-4 py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium">{o.display_name}</p>
-                            <span className="text-xs text-muted-foreground">@{o.username}</span>
-                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                              o.status === "pending"
-                                ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                : o.status === "approved"
-                                ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
-                                : "bg-destructive/10 text-destructive"
-                            }`}>
-                              {o.status}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                            <span>{o.email}</span>
-                            <span>·</span>
-                            <span className="font-medium text-foreground">
-                              {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
-                            </span>
-                            <span>·</span>
-                            <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
-                          </div>
-                        </div>
+                  groupedOrders.map((group) => (
+                    <div key={group.label}>
+                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
+                      </div>
+                      <div className="divide-y divide-border">
+                        {group.items.map((o) => (
+                          <div key={o.id} className="px-4 py-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-medium">{o.display_name}</p>
+                                  <span className="text-xs text-muted-foreground">@{o.username}</span>
+                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                    o.status === "pending"
+                                      ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                      : o.status === "approved"
+                                      ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
+                                      : "bg-destructive/10 text-destructive"
+                                  }`}>
+                                    {o.status}
+                                  </span>
+                                </div>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                  <span>{o.email}</span>
+                                  <span>·</span>
+                                  <span className="font-medium text-foreground">
+                                    {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
+                                  </span>
+                                  <span>·</span>
+                                  <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                </div>
+                              </div>
 
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          {o.transfer_proof_url && (
-                            <button
-                              onClick={() => setProofPreview(o.transfer_proof_url)}
-                              className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
-                              title="View proof"
-                            >
-                              <Eye className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                          {o.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => approveOrder(o)}
-                                className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
-                              >
-                                <CheckCircle2 className="h-3 w-3" /> Approve
-                              </button>
-                              <button
-                                onClick={() => rejectOrder(o)}
-                                className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                              >
-                                <XCircle className="h-3 w-3" /> Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                {o.transfer_proof_url && (
+                                  <button
+                                    onClick={() => setProofPreview(o.transfer_proof_url)}
+                                    className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+                                    title="View proof"
+                                  >
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                                {o.status === "pending" && (
+                                  <>
+                                    <button
+                                      onClick={() => approveOrder(o)}
+                                      className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                                    >
+                                      <CheckCircle2 className="h-3 w-3" /> Approve
+                                    </button>
+                                    <button
+                                      onClick={() => rejectOrder(o)}
+                                      className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                                    >
+                                      <XCircle className="h-3 w-3" /> Reject
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))
                 )}
               </div>
+
+              <SimplePagination page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
             </TabsContent>
 
             {/* Stories & Backup Tab */}
@@ -615,37 +741,53 @@ const Admin = () => {
               </div>
 
               <div className="mb-3 flex items-center justify-between">
-                <button onClick={toggleAllStories} className="text-xs text-muted-foreground hover:text-foreground">
-                  {selectedStories.size === filteredStories.length && filteredStories.length > 0 ? "Deselect all" : "Select all"}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button onClick={toggleAllStories} className="text-xs text-muted-foreground hover:text-foreground">
+                    {selectedStories.size === filteredStories.length && filteredStories.length > 0 ? "Deselect all" : "Select all"}
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    {filteredStories.length} stories · page {storyPage}/{storyTotalPages}
+                  </p>
+                </div>
                 <Button onClick={handleExportPDF} disabled={!selectedStories.size} size="sm" className="gap-2">
                   <Download className="h-3.5 w-3.5" /> Download PDF ({selectedStories.size})
                 </Button>
               </div>
 
-              <div className="divide-y divide-border rounded-md border border-border">
-                {filteredStories.length === 0 ? (
+              <div className="rounded-md border border-border">
+                {paginatedStories.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no stories found</p>
                 ) : (
-                  filteredStories.map((s) => (
-                    <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                      <Checkbox
-                        checked={selectedStories.has(s.id)}
-                        onCheckedChange={() => toggleStorySelect(s.id)}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
-                        </p>
+                  groupedStories.map((group) => (
+                    <div key={group.label}>
+                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
                       </div>
-                      <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="divide-y divide-border">
+                        {group.items.map((s) => (
+                          <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+                            <Checkbox
+                              checked={selectedStories.has(s.id)}
+                              onCheckedChange={() => toggleStorySelect(s.id)}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
+                              <p className="text-xs text-muted-foreground">
+                                by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
+                              </p>
+                            </div>
+                            <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))
                 )}
               </div>
+
+              <SimplePagination page={storyPage} totalPages={storyTotalPages} onPageChange={setStoryPage} />
             </TabsContent>
 
             {/* Settings Tab */}
