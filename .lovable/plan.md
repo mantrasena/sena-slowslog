@@ -1,28 +1,35 @@
 
 
-# Implementasi Route `/@username`
+# Rapihkan Admin Dashboard — Pagination + Grouping by Month/Year
 
-## Perubahan
+## Overview
+Tambahkan pagination (20 item per halaman) dan pengelompokan berdasarkan Bulan & Tahun untuk ketiga tab: Users, IC Orders, dan Stories & Backup.
 
-### 1. `src/App.tsx` — Tambah route baru + redirect lama
-- Tambah `<Route path="/@:username" element={<Profile />} />`
-- Ubah route lama `/profile/:username` menjadi redirect ke `/@:username` agar link lama tetap berfungsi
+## Perubahan (1 file: `src/pages/Admin.tsx`)
 
-### 2. Update semua link internal ke format `/@username`
-File yang perlu diubah (5 file, 5 lokasi):
+### 1. Users Tab
+- Grup user berdasarkan bulan+tahun registrasi (`joined_at`), tampilkan header separator "November 2025", "October 2025", dst
+- Pagination 20 user per halaman dengan navigasi halaman di bawah
+- State baru: `userPage`
 
-| File | Perubahan |
-|------|-----------|
-| `src/components/StoryCard.tsx` | `/profile/${username}` → `/@${username}` |
-| `src/components/Header.tsx` | `/profile/${username}` → `/@${username}` |
-| `src/pages/StoryDetail.tsx` | 2 link `/profile/` → `/@` |
-| `src/components/SearchDialog.tsx` | `/profile/${username}` → `/@${username}` |
+### 2. IC Orders Tab
+- Grup order berdasarkan bulan+tahun `created_at`, tampilkan header separator per bulan
+- Pagination 20 order per halaman
+- State baru: `orderPage`
+- Tambah date filter dropdown (mirip Stories tab yang sudah ada)
 
-### 3. `src/pages/Profile.tsx` — Tidak perlu diubah
-`useParams()` tetap mengembalikan `username` dengan benar karena `@` adalah bagian dari path prefix, bukan parameter.
+### 3. Stories & Backup Tab
+- Grup story berdasarkan bulan+tahun `published_at`, tampilkan header separator per bulan
+- Pagination 20 story per halaman (sudah ada date filter, tinggal tambah pagination)
+- State baru: `storyPage`
 
-## Dampak
-- URL lama (`/profile/mantra`) otomatis redirect ke `/@mantra`
-- Tidak ada perubahan database atau query
-- Semua link internal langsung menggunakan format baru
+### 4. Shared Pattern
+- Helper function `groupByMonth(items, dateKey)` yang mengembalikan items diurutkan dengan section headers
+- Komponen pagination sederhana (Previous / 1 2 3 / Next) menggunakan UI pagination yang sudah ada di project
+- Reset halaman ke 1 saat filter/search berubah
+
+### Detail Teknis
+- Semua perubahan di `src/pages/Admin.tsx` saja
+- Menggunakan `src/components/ui/pagination.tsx` yang sudah ada
+- Tidak ada perubahan database
 
