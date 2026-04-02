@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/Header";
+import HomepagePopup from "@/components/HomepagePopup";
 import Footer from "@/components/Footer";
 import StoryCard from "@/components/StoryCard";
 import { usePublishedStories } from "@/hooks/useStories";
@@ -43,6 +44,7 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <HomepagePopup />
       <Header />
       <main className="flex-1">
         <section className="py-16 text-center md:py-24">
