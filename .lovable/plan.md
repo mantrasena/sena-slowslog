@@ -1,35 +1,53 @@
 
 
-# Rapihkan Admin Dashboard — Pagination + Grouping by Month/Year
+# Homepage Popup Modal — Admin-Managed Promotion
 
 ## Overview
-Tambahkan pagination (20 item per halaman) dan pengelompokan berdasarkan Bulan & Tahun untuk ketiga tab: Users, IC Orders, dan Stories & Backup.
+Admin can configure a popup (image + optional redirect URL) from the Settings tab. Visitors see it once per session on the homepage.
 
-## Perubahan (1 file: `src/pages/Admin.tsx`)
+## Database
 
-### 1. Users Tab
-- Grup user berdasarkan bulan+tahun registrasi (`joined_at`), tampilkan header separator "November 2025", "October 2025", dst
-- Pagination 20 user per halaman dengan navigasi halaman di bawah
-- State baru: `userPage`
+### New table: `popup_settings`
+| Column | Type | Default |
+|--------|------|---------|
+| id | uuid | gen_random_uuid() |
+| is_active | boolean | false |
+| image_url | text | null |
+| redirect_url | text | null |
+| created_at | timestamptz | now() |
+| updated_at | timestamptz | now() |
 
-### 2. IC Orders Tab
-- Grup order berdasarkan bulan+tahun `created_at`, tampilkan header separator per bulan
-- Pagination 20 order per halaman
-- State baru: `orderPage`
-- Tambah date filter dropdown (mirip Stories tab yang sudah ada)
+RLS: readable by everyone (SELECT), manageable by admin/founder (ALL).
 
-### 3. Stories & Backup Tab
-- Grup story berdasarkan bulan+tahun `published_at`, tampilkan header separator per bulan
-- Pagination 20 story per halaman (sudah ada date filter, tinggal tambah pagination)
-- State baru: `storyPage`
+## File Changes
 
-### 4. Shared Pattern
-- Helper function `groupByMonth(items, dateKey)` yang mengembalikan items diurutkan dengan section headers
-- Komponen pagination sederhana (Previous / 1 2 3 / Next) menggunakan UI pagination yang sudah ada di project
-- Reset halaman ke 1 saat filter/search berubah
+### 1. `src/components/admin/PopupManager.tsx` (new)
+Admin UI in Settings tab alongside VoucherManager:
+- Toggle enable/disable popup
+- Upload square image (1:1 ratio) to `story-images` bucket (reuse existing bucket)
+- Input for redirect URL (optional)
+- Web & mobile preview of uploaded image (proportional, not stretched)
+- Delete button to remove popup
+- Only 1 popup allowed — upsert logic
 
-### Detail Teknis
-- Semua perubahan di `src/pages/Admin.tsx` saja
-- Menggunakan `src/components/ui/pagination.tsx` yang sudah ada
-- Tidak ada perubahan database
+### 2. `src/pages/Admin.tsx`
+- Import and render `<PopupManager />` in the Settings tab below VoucherManager
+
+### 3. `src/components/HomepagePopup.tsx` (new)
+- Fetch active popup from `popup_settings` where `is_active = true`
+- Check `sessionStorage` for `popup_dismissed` flag — if set, don't show
+- Render centered modal with semi-transparent overlay
+- Image displayed with `object-contain` (no distortion, responsive)
+- Close button (❌) top-right
+- If redirect_url exists, image is wrapped in `<a>` tag
+- On close, set `sessionStorage.popup_dismissed = true`
+
+### 4. `src/pages/Index.tsx`
+- Import and render `<HomepagePopup />` inside the page
+
+## Technical Details
+- Image upload reuses existing `story-images` bucket
+- `object-contain` + `max-w-[90vw] max-h-[70vh]` ensures responsive display without distortion
+- Session-based dismissal via `sessionStorage` (resets on new tab/session)
+- Single row in `popup_settings` enforced by deleting old row before insert
 
