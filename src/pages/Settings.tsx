@@ -532,6 +532,11 @@ const Settings = () => {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Display Name</label>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                    {!canChange('display_name')
+                      ? countdown('display_name')
+                      : "changing your display name requires a 30-day wait before you can change it again"}
+                  </p>
                   {editingDisplayName ? (
                     <div className="mt-1 flex items-center gap-2">
                       <input
