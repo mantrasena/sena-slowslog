@@ -815,6 +815,8 @@ const Admin = () => {
                 </div>
 
                 <VoucherManager />
+
+                <PopupManager />
               </div>
             </TabsContent>
           </Tabs>
