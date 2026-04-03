@@ -385,8 +385,8 @@ const Admin = () => {
   const groupedStories = groupByMonth(paginatedStories, "published_at");
 
   // Reset page when filters change
-  useEffect(() => { setUserPage(1); }, [userSearch]);
-  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter]);
+  useEffect(() => { setUserPage(1); }, [userSearch, userDateFilter]);
+  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter, orderDateFilter]);
   useEffect(() => { setStoryPage(1); }, [storySearch, storyUserFilter, dateFilter]);
 
   const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
