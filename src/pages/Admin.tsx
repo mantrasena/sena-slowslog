@@ -161,15 +161,15 @@ const getDateFilterOptions = () => {
   return options;
 };
 
-const filterByDate = (stories: StoryRow[], filterValue: string) => {
-  if (filterValue === "all") return stories;
+const filterByDate = <T,>(items: T[], filterValue: string, dateKey: keyof T): T[] => {
+  if (filterValue === "all") return items;
   const now = new Date();
   if (filterValue.startsWith("month-")) {
     const monthsAgo = parseInt(filterValue.split("-")[1]);
     const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
-    return stories.filter((s) => {
-      const d = new Date(s.published_at || "");
+    return items.filter((item) => {
+      const d = new Date((item[dateKey] as string) || "");
       return d >= start && d <= end;
     });
   }
@@ -177,12 +177,12 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
     const year = parseInt(filterValue.split("-")[1]);
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31, 23, 59, 59);
-    return stories.filter((s) => {
-      const d = new Date(s.published_at || "");
+    return items.filter((item) => {
+      const d = new Date((item[dateKey] as string) || "");
       return d >= start && d <= end;
     });
   }
-  return stories;
+  return items;
 };
 
 const Admin = () => {
@@ -196,6 +196,8 @@ const Admin = () => {
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
+  const [userDateFilter, setUserDateFilter] = useState("all");
+  const [orderDateFilter, setOrderDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Pagination states
@@ -324,19 +326,22 @@ const Admin = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return users;
-    const q = userSearch.toLowerCase();
-    return users.filter(
-      (u) => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)
-    );
-  }, [users, userSearch]);
+    let result = filterByDate(users, userDateFilter, "joined_at");
+    if (userSearch.trim()) {
+      const q = userSearch.toLowerCase();
+      result = result.filter(
+        (u) => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [users, userSearch, userDateFilter]);
 
   const filteredStories = useMemo(() => {
     let result = stories;
     if (storyUserFilter !== "all") {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
-    result = filterByDate(result, dateFilter);
+    result = filterByDate(result, dateFilter, "published_at");
     if (storySearch.trim()) {
       const q = storySearch.toLowerCase();
       result = result.filter(
@@ -350,7 +355,7 @@ const Admin = () => {
   }, [stories, storyUserFilter, dateFilter, storySearch]);
 
   const filteredOrders = useMemo(() => {
-    let result = orders;
+    let result = filterByDate(orders, orderDateFilter, "created_at");
     if (orderStatusFilter !== "all") {
       result = result.filter((o) => o.status === orderStatusFilter);
     }
@@ -364,7 +369,7 @@ const Admin = () => {
       );
     }
     return result;
-  }, [orders, orderStatusFilter, orderSearch]);
+  }, [orders, orderStatusFilter, orderSearch, orderDateFilter]);
 
   // Paginated + grouped data
   const userTotalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
@@ -380,8 +385,8 @@ const Admin = () => {
   const groupedStories = groupByMonth(paginatedStories, "published_at");
 
   // Reset page when filters change
-  useEffect(() => { setUserPage(1); }, [userSearch]);
-  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter]);
+  useEffect(() => { setUserPage(1); }, [userSearch, userDateFilter]);
+  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter, orderDateFilter]);
   useEffect(() => { setStoryPage(1); }, [storySearch, storyUserFilter, dateFilter]);
 
   const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
@@ -508,15 +513,29 @@ const Admin = () => {
             {/* Users Tab */}
             <TabsContent value="users" className="mt-4">
               <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    placeholder="Search by username or display name..."
-                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
-                  />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      placeholder="Search by username or display name..."
+                      className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                    <select
+                      value={userDateFilter}
+                      onChange={(e) => setUserDateFilter(e.target.value)}
+                      className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
+                    >
+                      {dateOptions.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
@@ -618,6 +637,18 @@ const Admin = () => {
                   <option value="approved">Approved ({orders.filter((o) => o.status === "approved").length})</option>
                   <option value="rejected">Rejected ({orders.filter((o) => o.status === "rejected").length})</option>
                 </select>
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  <select
+                    value={orderDateFilter}
+                    onChange={(e) => setOrderDateFilter(e.target.value)}
+                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
+                  >
+                    {dateOptions.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <p className="mb-3 text-xs text-muted-foreground">
