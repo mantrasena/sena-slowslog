@@ -818,6 +818,8 @@ const Admin = () => {
                 <VoucherManager />
 
                 <PopupManager />
+
+                <MaintenanceToggle />
               </div>
             </TabsContent>
           </Tabs>

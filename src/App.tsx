@@ -47,6 +47,7 @@ const App = () => (
             <Route path="/inner-circle/payment" element={<InnerCirclePayment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </MaintenanceGuard>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
