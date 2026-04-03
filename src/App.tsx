@@ -31,6 +31,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <BrowserRouter>
+          <MaintenanceGuard>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
