@@ -161,15 +161,15 @@ const getDateFilterOptions = () => {
   return options;
 };
 
-const filterByDate = (stories: StoryRow[], filterValue: string) => {
-  if (filterValue === "all") return stories;
+const filterByDate = <T,>(items: T[], filterValue: string, dateKey: keyof T): T[] => {
+  if (filterValue === "all") return items;
   const now = new Date();
   if (filterValue.startsWith("month-")) {
     const monthsAgo = parseInt(filterValue.split("-")[1]);
     const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
     const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
-    return stories.filter((s) => {
-      const d = new Date(s.published_at || "");
+    return items.filter((item) => {
+      const d = new Date((item[dateKey] as string) || "");
       return d >= start && d <= end;
     });
   }
@@ -177,12 +177,12 @@ const filterByDate = (stories: StoryRow[], filterValue: string) => {
     const year = parseInt(filterValue.split("-")[1]);
     const start = new Date(year, 0, 1);
     const end = new Date(year, 11, 31, 23, 59, 59);
-    return stories.filter((s) => {
-      const d = new Date(s.published_at || "");
+    return items.filter((item) => {
+      const d = new Date((item[dateKey] as string) || "");
       return d >= start && d <= end;
     });
   }
-  return stories;
+  return items;
 };
 
 const Admin = () => {
