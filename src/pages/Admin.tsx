@@ -355,7 +355,7 @@ const Admin = () => {
   }, [stories, storyUserFilter, dateFilter, storySearch]);
 
   const filteredOrders = useMemo(() => {
-    let result = orders;
+    let result = filterByDate(orders, orderDateFilter, "created_at");
     if (orderStatusFilter !== "all") {
       result = result.filter((o) => o.status === orderStatusFilter);
     }
@@ -369,7 +369,7 @@ const Admin = () => {
       );
     }
     return result;
-  }, [orders, orderStatusFilter, orderSearch]);
+  }, [orders, orderStatusFilter, orderSearch, orderDateFilter]);
 
   // Paginated + grouped data
   const userTotalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
