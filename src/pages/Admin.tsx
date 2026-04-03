@@ -637,6 +637,18 @@ const Admin = () => {
                   <option value="approved">Approved ({orders.filter((o) => o.status === "approved").length})</option>
                   <option value="rejected">Rejected ({orders.filter((o) => o.status === "rejected").length})</option>
                 </select>
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  <select
+                    value={orderDateFilter}
+                    onChange={(e) => setOrderDateFilter(e.target.value)}
+                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
+                  >
+                    {dateOptions.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <p className="mb-3 text-xs text-muted-foreground">
