@@ -15,6 +15,7 @@ import Bookmarks from "./pages/Bookmarks";
 import InnerCircle from "./pages/InnerCircle";
 import InnerCirclePayment from "./pages/InnerCirclePayment";
 import NotFound from "./pages/NotFound";
+import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 
 const queryClient = new QueryClient();
 
