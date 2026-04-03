@@ -326,12 +326,15 @@ const Admin = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return users;
-    const q = userSearch.toLowerCase();
-    return users.filter(
-      (u) => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)
-    );
-  }, [users, userSearch]);
+    let result = filterByDate(users, userDateFilter, "joined_at");
+    if (userSearch.trim()) {
+      const q = userSearch.toLowerCase();
+      result = result.filter(
+        (u) => u.username.toLowerCase().includes(q) || u.display_name.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [users, userSearch, userDateFilter]);
 
   const filteredStories = useMemo(() => {
     let result = stories;
