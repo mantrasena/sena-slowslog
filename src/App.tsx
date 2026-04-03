@@ -15,6 +15,7 @@ import Bookmarks from "./pages/Bookmarks";
 import InnerCircle from "./pages/InnerCircle";
 import InnerCirclePayment from "./pages/InnerCirclePayment";
 import NotFound from "./pages/NotFound";
+import { MaintenanceGuard } from "@/components/MaintenanceGuard";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <BrowserRouter>
+          <MaintenanceGuard>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -45,6 +47,7 @@ const App = () => (
             <Route path="/inner-circle/payment" element={<InnerCirclePayment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </MaintenanceGuard>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

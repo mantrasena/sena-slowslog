@@ -18,6 +18,7 @@ import type { Role } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
 import VoucherManager from "@/components/admin/VoucherManager";
 import PopupManager from "@/components/admin/PopupManager";
+import MaintenanceToggle from "@/components/admin/MaintenanceToggle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -817,6 +818,8 @@ const Admin = () => {
                 <VoucherManager />
 
                 <PopupManager />
+
+                <MaintenanceToggle />
               </div>
             </TabsContent>
           </Tabs>
