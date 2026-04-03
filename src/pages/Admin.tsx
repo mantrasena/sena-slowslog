@@ -196,6 +196,8 @@ const Admin = () => {
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState("all");
+  const [userDateFilter, setUserDateFilter] = useState("all");
+  const [orderDateFilter, setOrderDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
 
   // Pagination states
