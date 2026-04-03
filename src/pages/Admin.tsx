@@ -341,7 +341,7 @@ const Admin = () => {
     if (storyUserFilter !== "all") {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
-    result = filterByDate(result, dateFilter);
+    result = filterByDate(result, dateFilter, "published_at");
     if (storySearch.trim()) {
       const q = storySearch.toLowerCase();
       result = result.filter(
