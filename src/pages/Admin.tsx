@@ -600,99 +600,84 @@ const Admin = () => {
                   <option value="approved">Approved ({orders.filter((o) => o.status === "approved").length})</option>
                   <option value="rejected">Rejected ({orders.filter((o) => o.status === "rejected").length})</option>
                 </select>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  <select
-                    value={orderDateFilter}
-                    onChange={(e) => setOrderDateFilter(e.target.value)}
-                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                  >
-                    {dateOptions.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <p className="mb-3 text-xs text-muted-foreground">
-                {filteredOrders.length} order(s) · page {orderPage}/{orderTotalPages}
+                {filteredOrders.length} order(s)
               </p>
 
               <div className="rounded-md border border-border">
-                {paginatedOrders.length === 0 ? (
+                {groupedOrders.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no orders yet (◕ᴗ◕✿)</p>
                 ) : (
-                  groupedOrders.map((group) => (
-                    <div key={group.label}>
-                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                      </div>
-                      <div className="divide-y divide-border">
-                        {group.items.map((o) => (
-                          <div key={o.id} className="px-4 py-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-medium">{o.display_name}</p>
-                                  <span className="text-xs text-muted-foreground">@{o.username}</span>
-                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                    o.status === "pending"
-                                      ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                      : o.status === "approved"
-                                      ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
-                                      : "bg-destructive/10 text-destructive"
-                                  }`}>
-                                    {o.status}
-                                  </span>
+                  groupedOrders.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((o) => (
+                            <div key={o.id} className="px-4 py-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-medium">{o.display_name}</p>
+                                    <span className="text-xs text-muted-foreground">@{o.username}</span>
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                      o.status === "pending"
+                                        ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                        : o.status === "approved"
+                                        ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
+                                        : "bg-destructive/10 text-destructive"
+                                    }`}>
+                                      {o.status}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                    <span>{o.email}</span>
+                                    <span>·</span>
+                                    <span className="font-medium text-foreground">
+                                      {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
+                                    </span>
+                                    <span>·</span>
+                                    <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                  </div>
                                 </div>
-                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                                  <span>{o.email}</span>
-                                  <span>·</span>
-                                  <span className="font-medium text-foreground">
-                                    {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
-                                  </span>
-                                  <span>·</span>
-                                  <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
-                                </div>
-                              </div>
 
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                {o.transfer_proof_url && (
-                                  <button
-                                    onClick={() => setProofPreview(o.transfer_proof_url)}
-                                    className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
-                                    title="View proof"
-                                  >
-                                    <Eye className="h-3.5 w-3.5" />
-                                  </button>
-                                )}
-                                {o.status === "pending" && (
-                                  <>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {o.transfer_proof_url && (
                                     <button
-                                      onClick={() => approveOrder(o)}
-                                      className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                                      onClick={() => setProofPreview(o.transfer_proof_url)}
+                                      className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+                                      title="View proof"
                                     >
-                                      <CheckCircle2 className="h-3 w-3" /> Approve
+                                      <Eye className="h-3.5 w-3.5" />
                                     </button>
-                                    <button
-                                      onClick={() => rejectOrder(o)}
-                                      className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                                    >
-                                      <XCircle className="h-3 w-3" /> Reject
-                                    </button>
-                                  </>
-                                )}
+                                  )}
+                                  {o.status === "pending" && (
+                                    <>
+                                      <button
+                                        onClick={() => approveOrder(o)}
+                                        className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                                      >
+                                        <CheckCircle2 className="h-3 w-3" /> Approve
+                                      </button>
+                                      <button
+                                        onClick={() => rejectOrder(o)}
+                                        className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                                      >
+                                        <XCircle className="h-3 w-3" /> Reject
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
                   ))
                 )}
               </div>
-
-              <SimplePagination page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
             </TabsContent>
 
             {/* Stories & Backup Tab */}
@@ -722,18 +707,6 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  <select
-                    value={dateFilter}
-                    onChange={(e) => { setDateFilter(e.target.value); setSelectedStories(new Set()); }}
-                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                  >
-                    {dateOptions.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div className="mb-3 flex items-center justify-between">
@@ -742,7 +715,7 @@ const Admin = () => {
                     {selectedStories.size === filteredStories.length && filteredStories.length > 0 ? "Deselect all" : "Select all"}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    {filteredStories.length} stories · page {storyPage}/{storyTotalPages}
+                    {filteredStories.length} stories
                   </p>
                 </div>
                 <Button onClick={handleExportPDF} disabled={!selectedStories.size} size="sm" className="gap-2">
@@ -751,39 +724,36 @@ const Admin = () => {
               </div>
 
               <div className="rounded-md border border-border">
-                {paginatedStories.length === 0 ? (
+                {groupedStories.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no stories found</p>
                 ) : (
-                  groupedStories.map((group) => (
-                    <div key={group.label}>
-                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                      </div>
-                      <div className="divide-y divide-border">
-                        {group.items.map((s) => (
-                          <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                            <Checkbox
-                              checked={selectedStories.has(s.id)}
-                              onCheckedChange={() => toggleStorySelect(s.id)}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
-                              <p className="text-xs text-muted-foreground">
-                                by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
-                              </p>
+                  groupedStories.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((s) => (
+                            <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+                              <Checkbox
+                                checked={selectedStories.has(s.id)}
+                                onCheckedChange={() => toggleStorySelect(s.id)}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
+                                </p>
+                              </div>
+                              <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
-                            <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
                   ))
                 )}
               </div>
-
-              <SimplePagination page={storyPage} totalPages={storyTotalPages} onPageChange={setStoryPage} />
             </TabsContent>
 
             {/* Settings Tab */}
