@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Download, Search, Users, FileText, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
