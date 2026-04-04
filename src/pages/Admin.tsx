@@ -494,105 +494,87 @@ const Admin = () => {
             {/* Users Tab */}
             <TabsContent value="users" className="mt-4">
               <div className="mb-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      placeholder="Search by username or display name..."
-                      className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                    <select
-                      value={userDateFilter}
-                      onChange={(e) => setUserDateFilter(e.target.value)}
-                      className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                    >
-                      {dateOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Search by username or display name..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
                 </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {filteredUsers.length} user(s) · page {userPage}/{userTotalPages}
-                  </p>
-                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {filteredUsers.length} user(s)
+                </p>
               </div>
 
-              <div>
-                {groupedUsers.map((group) => (
-                  <div key={group.label}>
-                    <div className="sticky top-0 z-10 bg-background border-b border-border py-2 px-1 mb-1">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                    </div>
-                    <div className="divide-y divide-border">
-                      {group.items.map((u) => (
-                        <div key={u.user_id} className="flex items-center justify-between py-3 gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                              {u.display_name[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium truncate">{u.display_name}</p>
-                                {u.hasInnerCircle && <VerifiedBadge size="sm" />}
-                                <RoleBadge role={u.role} variant="card" />
-                              </div>
-                              <p className="text-xs text-muted-foreground">@{u.username}</p>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                <input
-                                  type="date"
-                                  defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
-                                  onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
-                                  className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
-                                  title="Change join date"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                              onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
-                              className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
-                                u.hasInnerCircle
-                                  ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                  : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
-                              }`}
-                              title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
-                            >
-                              <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
-                              {u.hasInnerCircle ? "IC" : "IC"}
-                            </button>
-                            <select
-                              value={u.role}
-                              onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
-                              className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
-                            >
-                              {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
-                                .filter((r) => isFounder || r !== "founder")
-                                .map((r) => (
-                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                                ))}
-                            </select>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {filteredUsers.length === 0 && (
+              <div className="rounded-md border border-border">
+                {groupedUsers.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">no users found (◕︿◕)</p>
+                ) : (
+                  groupedUsers.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((u) => (
+                            <div key={u.user_id} className="flex items-center justify-between py-3 px-4 gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                                  {u.display_name[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium truncate">{u.display_name}</p>
+                                    {u.hasInnerCircle && <VerifiedBadge size="sm" />}
+                                    <RoleBadge role={u.role} variant="card" />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">@{u.username}</p>
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                    <input
+                                      type="date"
+                                      defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
+                                      onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
+                                      className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
+                                      title="Change join date"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
+                                  className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
+                                    u.hasInnerCircle
+                                      ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                      : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
+                                  }`}
+                                  title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
+                                >
+                                  <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
+                                  {u.hasInnerCircle ? "IC" : "IC"}
+                                </button>
+                                <select
+                                  value={u.role}
+                                  onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
+                                  className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
+                                >
+                                  {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
+                                    .filter((r) => isFounder || r !== "founder")
+                                    .map((r) => (
+                                      <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                    ))}
+                                </select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
+                  ))
                 )}
               </div>
-
-              <SimplePagination page={userPage} totalPages={userTotalPages} onPageChange={setUserPage} />
             </TabsContent>
 
             {/* IC Orders Tab */}
