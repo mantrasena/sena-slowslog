@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import RoleBadge from "@/components/RoleBadge";
 import VerifiedBadge from "@/components/VerifiedBadge";
-import { Trash2, Download, Search, Users, FileText, Filter, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Trash2, Download, Search, Users, FileText, Settings, BadgeCheck, ShoppingBag, Eye, CheckCircle2, XCircle, Calendar, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
@@ -102,7 +102,7 @@ const SimplePagination = ({
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-6 pb-2">
+    <div className="flex items-center justify-center gap-1 pt-4 pb-2">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
@@ -144,45 +144,49 @@ const SimplePagination = ({
   );
 };
 
-const getDateFilterOptions = () => {
-  const now = new Date();
-  const options: { label: string; value: string }[] = [
-    { label: "All time", value: "all" },
-  ];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    options.push({ label, value: `month-${i}` });
-  }
-  const currentYear = now.getFullYear();
-  for (let y = currentYear; y >= currentYear - 3; y--) {
-    options.push({ label: `${y}`, value: `year-${y}` });
-  }
-  return options;
-};
+const CollapsibleMonthGroup = ({
+  label,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  label: string;
+  count: number;
+  defaultOpen?: boolean;
+  children: (paginatedRange: { start: number; end: number }) => React.ReactNode;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(count / ITEMS_PER_PAGE));
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
 
-const filterByDate = <T,>(items: T[], filterValue: string, dateKey: keyof T): T[] => {
-  if (filterValue === "all") return items;
-  const now = new Date();
-  if (filterValue.startsWith("month-")) {
-    const monthsAgo = parseInt(filterValue.split("-")[1]);
-    const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
-    return items.filter((item) => {
-      const d = new Date((item[dateKey] as string) || "");
-      return d >= start && d <= end;
-    });
-  }
-  if (filterValue.startsWith("year-")) {
-    const year = parseInt(filterValue.split("-")[1]);
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31, 23, 59, 59);
-    return items.filter((item) => {
-      const d = new Date((item[dateKey] as string) || "");
-      return d >= start && d <= end;
-    });
-  }
-  return items;
+  return (
+    <div className="border-b border-border last:border-b-0">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+      >
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
+            isOpen ? "" : "-rotate-90"
+          }`}
+        />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">
+          {label}
+        </span>
+        <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+          {count}
+        </span>
+      </button>
+      {isOpen && (
+        <div>
+          {children({ start, end })}
+          <SimplePagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Admin = () => {
@@ -195,23 +199,13 @@ const Admin = () => {
   const [storySearch, setStorySearch] = useState("");
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
-  const [dateFilter, setDateFilter] = useState("all");
-  const [userDateFilter, setUserDateFilter] = useState("all");
-  const [orderDateFilter, setOrderDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
-
-  // Pagination states
-  const [userPage, setUserPage] = useState(1);
-  const [orderPage, setOrderPage] = useState(1);
-  const [storyPage, setStoryPage] = useState(1);
 
   // IC Orders state
   const [orders, setOrders] = useState<ICOrder[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
   const [proofPreview, setProofPreview] = useState<string | null>(null);
-
-  const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
   // Inner Circle feature toggle
   const { data: innerCircleEnabled, refetch: refetchSetting } = useQuery({
@@ -326,7 +320,7 @@ const Admin = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    let result = filterByDate(users, userDateFilter, "joined_at");
+    let result = users;
     if (userSearch.trim()) {
       const q = userSearch.toLowerCase();
       result = result.filter(
@@ -334,14 +328,13 @@ const Admin = () => {
       );
     }
     return result;
-  }, [users, userSearch, userDateFilter]);
+  }, [users, userSearch]);
 
   const filteredStories = useMemo(() => {
     let result = stories;
     if (storyUserFilter !== "all") {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
-    result = filterByDate(result, dateFilter, "published_at");
     if (storySearch.trim()) {
       const q = storySearch.toLowerCase();
       result = result.filter(
@@ -352,10 +345,10 @@ const Admin = () => {
       );
     }
     return result;
-  }, [stories, storyUserFilter, dateFilter, storySearch]);
+  }, [stories, storyUserFilter, storySearch]);
 
   const filteredOrders = useMemo(() => {
-    let result = filterByDate(orders, orderDateFilter, "created_at");
+    let result = orders;
     if (orderStatusFilter !== "all") {
       result = result.filter((o) => o.status === orderStatusFilter);
     }
@@ -369,25 +362,13 @@ const Admin = () => {
       );
     }
     return result;
-  }, [orders, orderStatusFilter, orderSearch, orderDateFilter]);
+  }, [orders, orderStatusFilter, orderSearch]);
 
-  // Paginated + grouped data
-  const userTotalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice((userPage - 1) * ITEMS_PER_PAGE, userPage * ITEMS_PER_PAGE);
-  const groupedUsers = groupByMonth(paginatedUsers, "joined_at");
+  // Grouped data for collapsible sections
+  const groupedUsers = useMemo(() => groupByMonth(filteredUsers, "joined_at"), [filteredUsers]);
+  const groupedOrders = useMemo(() => groupByMonth(filteredOrders, "created_at"), [filteredOrders]);
+  const groupedStories = useMemo(() => groupByMonth(filteredStories, "published_at"), [filteredStories]);
 
-  const orderTotalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
-  const paginatedOrders = filteredOrders.slice((orderPage - 1) * ITEMS_PER_PAGE, orderPage * ITEMS_PER_PAGE);
-  const groupedOrders = groupByMonth(paginatedOrders, "created_at");
-
-  const storyTotalPages = Math.max(1, Math.ceil(filteredStories.length / ITEMS_PER_PAGE));
-  const paginatedStories = filteredStories.slice((storyPage - 1) * ITEMS_PER_PAGE, storyPage * ITEMS_PER_PAGE);
-  const groupedStories = groupByMonth(paginatedStories, "published_at");
-
-  // Reset page when filters change
-  useEffect(() => { setUserPage(1); }, [userSearch, userDateFilter]);
-  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter, orderDateFilter]);
-  useEffect(() => { setStoryPage(1); }, [storySearch, storyUserFilter, dateFilter]);
 
   const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
 
@@ -513,105 +494,87 @@ const Admin = () => {
             {/* Users Tab */}
             <TabsContent value="users" className="mt-4">
               <div className="mb-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="text"
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      placeholder="Search by username or display name..."
-                      className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
-                    />
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                    <select
-                      value={userDateFilter}
-                      onChange={(e) => setUserDateFilter(e.target.value)}
-                      className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                    >
-                      {dateOptions.map((o) => (
-                        <option key={o.value} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Search by username or display name..."
+                    className="w-full rounded-md border border-border bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground/50 focus:border-foreground focus:outline-none transition-colors"
+                  />
                 </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {filteredUsers.length} user(s) · page {userPage}/{userTotalPages}
-                  </p>
-                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {filteredUsers.length} user(s)
+                </p>
               </div>
 
-              <div>
-                {groupedUsers.map((group) => (
-                  <div key={group.label}>
-                    <div className="sticky top-0 z-10 bg-background border-b border-border py-2 px-1 mb-1">
-                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                    </div>
-                    <div className="divide-y divide-border">
-                      {group.items.map((u) => (
-                        <div key={u.user_id} className="flex items-center justify-between py-3 gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
-                              {u.display_name[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
-                                <p className="text-sm font-medium truncate">{u.display_name}</p>
-                                {u.hasInnerCircle && <VerifiedBadge size="sm" />}
-                                <RoleBadge role={u.role} variant="card" />
-                              </div>
-                              <p className="text-xs text-muted-foreground">@{u.username}</p>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                <input
-                                  type="date"
-                                  defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
-                                  onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
-                                  className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
-                                  title="Change join date"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <button
-                              onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
-                              className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
-                                u.hasInnerCircle
-                                  ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                  : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
-                              }`}
-                              title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
-                            >
-                              <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
-                              {u.hasInnerCircle ? "IC" : "IC"}
-                            </button>
-                            <select
-                              value={u.role}
-                              onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
-                              className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
-                            >
-                              {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
-                                .filter((r) => isFounder || r !== "founder")
-                                .map((r) => (
-                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                                ))}
-                            </select>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {filteredUsers.length === 0 && (
+              <div className="rounded-md border border-border">
+                {groupedUsers.length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">no users found (◕︿◕)</p>
+                ) : (
+                  groupedUsers.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((u) => (
+                            <div key={u.user_id} className="flex items-center justify-between py-3 px-4 gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                                  {u.display_name[0]}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-medium truncate">{u.display_name}</p>
+                                    {u.hasInnerCircle && <VerifiedBadge size="sm" />}
+                                    <RoleBadge role={u.role} variant="card" />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">@{u.username}</p>
+                                  <div className="flex items-center gap-1 mt-0.5">
+                                    <Calendar className="h-3 w-3 text-muted-foreground" />
+                                    <input
+                                      type="date"
+                                      defaultValue={u.joined_at ? format(new Date(u.joined_at), "yyyy-MM-dd") : ""}
+                                      onBlur={(e) => updateJoinDate(u.user_id, e.target.value)}
+                                      className="bg-transparent text-[10px] text-muted-foreground border-none p-0 focus:outline-none focus:text-foreground w-24"
+                                      title="Change join date"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                  onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
+                                  className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
+                                    u.hasInnerCircle
+                                      ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                      : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
+                                  }`}
+                                  title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
+                                >
+                                  <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
+                                  {u.hasInnerCircle ? "IC" : "IC"}
+                                </button>
+                                <select
+                                  value={u.role}
+                                  onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
+                                  className="rounded-md border border-border bg-transparent px-2 py-1 text-xs focus:outline-none"
+                                >
+                                  {(["founder", "admin", "early_adopter", "contributor", "writer"] as Role[])
+                                    .filter((r) => isFounder || r !== "founder")
+                                    .map((r) => (
+                                      <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                    ))}
+                                </select>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
+                  ))
                 )}
               </div>
-
-              <SimplePagination page={userPage} totalPages={userTotalPages} onPageChange={setUserPage} />
             </TabsContent>
 
             {/* IC Orders Tab */}
@@ -637,99 +600,84 @@ const Admin = () => {
                   <option value="approved">Approved ({orders.filter((o) => o.status === "approved").length})</option>
                   <option value="rejected">Rejected ({orders.filter((o) => o.status === "rejected").length})</option>
                 </select>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  <select
-                    value={orderDateFilter}
-                    onChange={(e) => setOrderDateFilter(e.target.value)}
-                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                  >
-                    {dateOptions.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <p className="mb-3 text-xs text-muted-foreground">
-                {filteredOrders.length} order(s) · page {orderPage}/{orderTotalPages}
+                {filteredOrders.length} order(s)
               </p>
 
               <div className="rounded-md border border-border">
-                {paginatedOrders.length === 0 ? (
+                {groupedOrders.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no orders yet (◕ᴗ◕✿)</p>
                 ) : (
-                  groupedOrders.map((group) => (
-                    <div key={group.label}>
-                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                      </div>
-                      <div className="divide-y divide-border">
-                        {group.items.map((o) => (
-                          <div key={o.id} className="px-4 py-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="text-sm font-medium">{o.display_name}</p>
-                                  <span className="text-xs text-muted-foreground">@{o.username}</span>
-                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                    o.status === "pending"
-                                      ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                      : o.status === "approved"
-                                      ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
-                                      : "bg-destructive/10 text-destructive"
-                                  }`}>
-                                    {o.status}
-                                  </span>
+                  groupedOrders.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((o) => (
+                            <div key={o.id} className="px-4 py-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-medium">{o.display_name}</p>
+                                    <span className="text-xs text-muted-foreground">@{o.username}</span>
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                      o.status === "pending"
+                                        ? "bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
+                                        : o.status === "approved"
+                                        ? "bg-[hsl(140,50%,92%)] text-[hsl(140,50%,30%)]"
+                                        : "bg-destructive/10 text-destructive"
+                                    }`}>
+                                      {o.status}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                                    <span>{o.email}</span>
+                                    <span>·</span>
+                                    <span className="font-medium text-foreground">
+                                      {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
+                                    </span>
+                                    <span>·</span>
+                                    <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
+                                  </div>
                                 </div>
-                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                                  <span>{o.email}</span>
-                                  <span>·</span>
-                                  <span className="font-medium text-foreground">
-                                    {o.plan === "yearly" ? "1 Year (Rp. 99.000)" : "Lifetime (Rp. 299.000)"}
-                                  </span>
-                                  <span>·</span>
-                                  <span>{new Date(o.created_at).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</span>
-                                </div>
-                              </div>
 
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                {o.transfer_proof_url && (
-                                  <button
-                                    onClick={() => setProofPreview(o.transfer_proof_url)}
-                                    className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
-                                    title="View proof"
-                                  >
-                                    <Eye className="h-3.5 w-3.5" />
-                                  </button>
-                                )}
-                                {o.status === "pending" && (
-                                  <>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {o.transfer_proof_url && (
                                     <button
-                                      onClick={() => approveOrder(o)}
-                                      className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                                      onClick={() => setProofPreview(o.transfer_proof_url)}
+                                      className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+                                      title="View proof"
                                     >
-                                      <CheckCircle2 className="h-3 w-3" /> Approve
+                                      <Eye className="h-3.5 w-3.5" />
                                     </button>
-                                    <button
-                                      onClick={() => rejectOrder(o)}
-                                      className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
-                                    >
-                                      <XCircle className="h-3 w-3" /> Reject
-                                    </button>
-                                  </>
-                                )}
+                                  )}
+                                  {o.status === "pending" && (
+                                    <>
+                                      <button
+                                        onClick={() => approveOrder(o)}
+                                        className="flex h-7 items-center gap-1 rounded-md border border-[hsl(140,50%,75%)] bg-[hsl(140,50%,95%)] px-2 text-[10px] font-medium text-[hsl(140,50%,30%)] hover:bg-[hsl(140,50%,90%)] transition-colors"
+                                      >
+                                        <CheckCircle2 className="h-3 w-3" /> Approve
+                                      </button>
+                                      <button
+                                        onClick={() => rejectOrder(o)}
+                                        className="flex h-7 items-center gap-1 rounded-md border border-destructive/30 bg-destructive/5 px-2 text-[10px] font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                                      >
+                                        <XCircle className="h-3 w-3" /> Reject
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
                   ))
                 )}
               </div>
-
-              <SimplePagination page={orderPage} totalPages={orderTotalPages} onPageChange={setOrderPage} />
             </TabsContent>
 
             {/* Stories & Backup Tab */}
@@ -759,18 +707,6 @@ const Admin = () => {
                     </option>
                   ))}
                 </select>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  <select
-                    value={dateFilter}
-                    onChange={(e) => { setDateFilter(e.target.value); setSelectedStories(new Set()); }}
-                    className="rounded-md border border-border bg-transparent px-2 py-2 text-xs focus:outline-none focus:border-foreground transition-colors"
-                  >
-                    {dateOptions.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div className="mb-3 flex items-center justify-between">
@@ -779,7 +715,7 @@ const Admin = () => {
                     {selectedStories.size === filteredStories.length && filteredStories.length > 0 ? "Deselect all" : "Select all"}
                   </button>
                   <p className="text-xs text-muted-foreground">
-                    {filteredStories.length} stories · page {storyPage}/{storyTotalPages}
+                    {filteredStories.length} stories
                   </p>
                 </div>
                 <Button onClick={handleExportPDF} disabled={!selectedStories.size} size="sm" className="gap-2">
@@ -788,39 +724,36 @@ const Admin = () => {
               </div>
 
               <div className="rounded-md border border-border">
-                {paginatedStories.length === 0 ? (
+                {groupedStories.length === 0 ? (
                   <p className="px-4 py-8 text-center text-sm text-muted-foreground">no stories found</p>
                 ) : (
-                  groupedStories.map((group) => (
-                    <div key={group.label}>
-                      <div className="sticky top-0 z-10 bg-muted/50 border-b border-border px-4 py-2">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</p>
-                      </div>
-                      <div className="divide-y divide-border">
-                        {group.items.map((s) => (
-                          <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                            <Checkbox
-                              checked={selectedStories.has(s.id)}
-                              onCheckedChange={() => toggleStorySelect(s.id)}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
-                              <p className="text-xs text-muted-foreground">
-                                by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
-                              </p>
+                  groupedStories.map((group, idx) => (
+                    <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
+                      {({ start, end }) => (
+                        <div className="divide-y divide-border">
+                          {group.items.slice(start, end).map((s) => (
+                            <div key={s.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+                              <Checkbox
+                                checked={selectedStories.has(s.id)}
+                                onCheckedChange={() => toggleStorySelect(s.id)}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium">{s.title || "untitled"}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  by {s.author_name} · {s.published_at ? new Date(s.published_at).toLocaleDateString() : "draft"} · {s.views} views
+                                </p>
+                              </div>
+                              <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
-                            <button onClick={() => setDeleteStoryTarget({ id: s.id, title: s.title })} className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors">
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                          ))}
+                        </div>
+                      )}
+                    </CollapsibleMonthGroup>
                   ))
                 )}
               </div>
-
-              <SimplePagination page={storyPage} totalPages={storyTotalPages} onPageChange={setStoryPage} />
             </TabsContent>
 
             {/* Settings Tab */}
