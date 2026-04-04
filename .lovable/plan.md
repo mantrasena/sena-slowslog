@@ -1,34 +1,57 @@
 
 
-# Month/Year Dropdown Filters for Admin Tabs
+# Collapsible Month/Year Groups with Per-Group Pagination
 
 ## Overview
-Tambahkan dropdown filter bulan/tahun di ketiga tab (Users, IC Orders, Stories & Backup) agar data bisa difilter per periode secara rapih. Stories tab sudah punya date filter — Users dan IC Orders akan mendapat dropdown serupa.
+Replace the current flat-list-with-dropdown-filter approach with collapsible month/year sections. Each month becomes a clickable header that expands to show its items (max 20 per page), with pagination inside each group if needed.
+
+## Current vs New
+
+```text
+CURRENT:
+  [Dropdown: March 2026 ▼]  ← filter selects one period
+  ── March 2026 ──
+  user1, user2, ... user20
+  [< 1 2 3 >]               ← global pagination
+
+NEW:
+  ▶ March 2026 (24 users)   ← collapsed, click to expand
+  ▼ February 2026 (18 users) ← expanded
+     user1, user2, ... user18
+  ▶ January 2026 (45 users) ← collapsed
+```
 
 ## Changes (1 file: `src/pages/Admin.tsx`)
 
-### 1. New State Variables
-- `userDateFilter` — default `"all"`
-- `orderDateFilter` — default `"all"`
+### 1. Remove global date filter dropdowns & global pagination
+- Remove `userDateFilter`, `orderDateFilter`, `dateFilter` states
+- Remove `filterByDate` usage from `filteredUsers`, `filteredOrders`, `filteredStories`
+- Remove `getDateFilterOptions`, `filterByDate` functions (no longer needed)
+- Remove global `SimplePagination` from Users, Orders, Stories tabs
+- Remove `userPage`, `orderPage`, `storyPage` and their totalPages calculations
 
-### 2. Reuse `getDateFilterOptions()` & generalize `filterByDate()`
-- Generalize `filterByDate` to work with any item + date key (not just stories)
-- Reuse `dateOptions` yang sudah ada
+### 2. New `CollapsibleMonthGroup` component
+- Props: `label`, `count`, `children`, `defaultOpen` (first group defaults open)
+- Clickable header row: chevron icon (▶/▼) + month label + item count badge
+- Toggling expands/collapses the content area with smooth transition
+- Uses local state for open/closed
 
-### 3. Users Tab
-- Add month/year dropdown next to search bar (same style as Stories tab)
-- Filter `filteredUsers` by `joined_at` using the selected period
-- Reset `userPage` to 1 when `userDateFilter` changes
+### 3. Per-group pagination
+- Each month group internally paginates its items (20 per page)
+- `CollapsibleMonthGroup` manages its own page state
+- `SimplePagination` renders inside each group when items > 20
 
-### 4. IC Orders Tab
-- Add month/year dropdown next to status filter
-- Filter `filteredOrders` by `created_at` using the selected period
-- Reset `orderPage` to 1 when `orderDateFilter` changes
+### 4. Apply to all three tabs
+- **Users tab**: Group by `joined_at`, search still works as global filter across all groups
+- **IC Orders tab**: Group by `created_at`, status filter still works globally
+- **Stories tab**: Group by `published_at`, author filter still works globally
+- Groups are sorted newest-first (already the case with `groupByMonth`)
 
-### 5. Stories Tab
-- Already has date filter — no changes needed, just keep consistent styling
+### 5. Future-proof
+- Pattern is generic — any new tab (e.g. Registration Waitlist) can reuse `CollapsibleMonthGroup` + `groupByMonth`
 
-### UI Layout
-- Each dropdown uses the same compact style: `<Filter icon> <select>` pattern already used in Stories tab
-- Placed inline with existing filters for clean layout
+## UI Detail
+- Header: `border-b`, subtle `bg-muted/30`, `cursor-pointer`, chevron rotates on open
+- Count badge: small `(24)` next to month label
+- Collapsed state saves vertical space — solves the original problem
 
