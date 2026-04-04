@@ -102,7 +102,7 @@ const SimplePagination = ({
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-6 pb-2">
+    <div className="flex items-center justify-center gap-1 pt-4 pb-2">
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page === 1}
@@ -144,45 +144,49 @@ const SimplePagination = ({
   );
 };
 
-const getDateFilterOptions = () => {
-  const now = new Date();
-  const options: { label: string; value: string }[] = [
-    { label: "All time", value: "all" },
-  ];
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    options.push({ label, value: `month-${i}` });
-  }
-  const currentYear = now.getFullYear();
-  for (let y = currentYear; y >= currentYear - 3; y--) {
-    options.push({ label: `${y}`, value: `year-${y}` });
-  }
-  return options;
-};
+const CollapsibleMonthGroup = ({
+  label,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  label: string;
+  count: number;
+  defaultOpen?: boolean;
+  children: (paginatedRange: { start: number; end: number }) => React.ReactNode;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(count / ITEMS_PER_PAGE));
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const end = start + ITEMS_PER_PAGE;
 
-const filterByDate = <T,>(items: T[], filterValue: string, dateKey: keyof T): T[] => {
-  if (filterValue === "all") return items;
-  const now = new Date();
-  if (filterValue.startsWith("month-")) {
-    const monthsAgo = parseInt(filterValue.split("-")[1]);
-    const start = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() - monthsAgo + 1, 0, 23, 59, 59);
-    return items.filter((item) => {
-      const d = new Date((item[dateKey] as string) || "");
-      return d >= start && d <= end;
-    });
-  }
-  if (filterValue.startsWith("year-")) {
-    const year = parseInt(filterValue.split("-")[1]);
-    const start = new Date(year, 0, 1);
-    const end = new Date(year, 11, 31, 23, 59, 59);
-    return items.filter((item) => {
-      const d = new Date((item[dateKey] as string) || "");
-      return d >= start && d <= end;
-    });
-  }
-  return items;
+  return (
+    <div className="border-b border-border last:border-b-0">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center gap-2 px-4 py-3 text-left bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer"
+      >
+        <ChevronDown
+          className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${
+            isOpen ? "" : "-rotate-90"
+          }`}
+        />
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-1">
+          {label}
+        </span>
+        <span className="text-[10px] text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+          {count}
+        </span>
+      </button>
+      {isOpen && (
+        <div>
+          {children({ start, end })}
+          <SimplePagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </div>
+      )}
+    </div>
+  );
 };
 
 const Admin = () => {
