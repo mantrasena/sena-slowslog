@@ -199,23 +199,13 @@ const Admin = () => {
   const [storySearch, setStorySearch] = useState("");
   const [storyUserFilter, setStoryUserFilter] = useState<string>("all");
   const [selectedStories, setSelectedStories] = useState<Set<string>>(new Set());
-  const [dateFilter, setDateFilter] = useState("all");
-  const [userDateFilter, setUserDateFilter] = useState("all");
-  const [orderDateFilter, setOrderDateFilter] = useState("all");
   const [deleteStoryTarget, setDeleteStoryTarget] = useState<{ id: string; title: string } | null>(null);
-
-  // Pagination states
-  const [userPage, setUserPage] = useState(1);
-  const [orderPage, setOrderPage] = useState(1);
-  const [storyPage, setStoryPage] = useState(1);
 
   // IC Orders state
   const [orders, setOrders] = useState<ICOrder[]>([]);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
   const [proofPreview, setProofPreview] = useState<string | null>(null);
-
-  const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
   // Inner Circle feature toggle
   const { data: innerCircleEnabled, refetch: refetchSetting } = useQuery({
@@ -330,7 +320,7 @@ const Admin = () => {
   };
 
   const filteredUsers = useMemo(() => {
-    let result = filterByDate(users, userDateFilter, "joined_at");
+    let result = users;
     if (userSearch.trim()) {
       const q = userSearch.toLowerCase();
       result = result.filter(
@@ -338,14 +328,13 @@ const Admin = () => {
       );
     }
     return result;
-  }, [users, userSearch, userDateFilter]);
+  }, [users, userSearch]);
 
   const filteredStories = useMemo(() => {
     let result = stories;
     if (storyUserFilter !== "all") {
       result = result.filter((s) => s.user_id === storyUserFilter);
     }
-    result = filterByDate(result, dateFilter, "published_at");
     if (storySearch.trim()) {
       const q = storySearch.toLowerCase();
       result = result.filter(
@@ -356,10 +345,10 @@ const Admin = () => {
       );
     }
     return result;
-  }, [stories, storyUserFilter, dateFilter, storySearch]);
+  }, [stories, storyUserFilter, storySearch]);
 
   const filteredOrders = useMemo(() => {
-    let result = filterByDate(orders, orderDateFilter, "created_at");
+    let result = orders;
     if (orderStatusFilter !== "all") {
       result = result.filter((o) => o.status === orderStatusFilter);
     }
@@ -373,25 +362,13 @@ const Admin = () => {
       );
     }
     return result;
-  }, [orders, orderStatusFilter, orderSearch, orderDateFilter]);
+  }, [orders, orderStatusFilter, orderSearch]);
 
-  // Paginated + grouped data
-  const userTotalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice((userPage - 1) * ITEMS_PER_PAGE, userPage * ITEMS_PER_PAGE);
-  const groupedUsers = groupByMonth(paginatedUsers, "joined_at");
+  // Grouped data for collapsible sections
+  const groupedUsers = useMemo(() => groupByMonth(filteredUsers, "joined_at"), [filteredUsers]);
+  const groupedOrders = useMemo(() => groupByMonth(filteredOrders, "created_at"), [filteredOrders]);
+  const groupedStories = useMemo(() => groupByMonth(filteredStories, "published_at"), [filteredStories]);
 
-  const orderTotalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
-  const paginatedOrders = filteredOrders.slice((orderPage - 1) * ITEMS_PER_PAGE, orderPage * ITEMS_PER_PAGE);
-  const groupedOrders = groupByMonth(paginatedOrders, "created_at");
-
-  const storyTotalPages = Math.max(1, Math.ceil(filteredStories.length / ITEMS_PER_PAGE));
-  const paginatedStories = filteredStories.slice((storyPage - 1) * ITEMS_PER_PAGE, storyPage * ITEMS_PER_PAGE);
-  const groupedStories = groupByMonth(paginatedStories, "published_at");
-
-  // Reset page when filters change
-  useEffect(() => { setUserPage(1); }, [userSearch, userDateFilter]);
-  useEffect(() => { setOrderPage(1); }, [orderSearch, orderStatusFilter, orderDateFilter]);
-  useEffect(() => { setStoryPage(1); }, [storySearch, storyUserFilter, dateFilter]);
 
   const pendingCount = useMemo(() => orders.filter((o) => o.status === "pending").length, [orders]);
 
