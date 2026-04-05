@@ -251,6 +251,7 @@ const Admin = () => {
     fetchUsers();
     fetchStories();
     fetchOrders();
+    fetchMemberships();
   }, []);
 
   const fetchUsers = async () => {
