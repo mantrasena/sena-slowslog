@@ -616,9 +616,44 @@ const Settings = () => {
                     <span>Inner Circle</span>
                   </div>
                   {isInnerCircle ? (
-                    <p className="mt-1.5 text-xs text-muted-foreground">
-                      you're an Inner Circle member! thank you for your support (★‿★)
-                    </p>
+                    <>
+                      <button
+                        onClick={() => setIcDetailsOpen(!icDetailsOpen)}
+                        className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-left"
+                      >
+                        <span>you're an Inner Circle member! thank you for your support (★‿★)</span>
+                        <ChevronDown className={`h-3 w-3 ml-auto flex-shrink-0 transition-transform duration-200 ${icDetailsOpen ? "" : "-rotate-90"}`} />
+                      </button>
+                      {icDetailsOpen && membership && (
+                        <div className="mt-3 rounded-md border border-[hsl(45,70%,80%)] bg-[hsl(45,80%,97%)] p-3 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-muted-foreground">Plan</span>
+                            <span className="text-[11px] font-medium">
+                              {membership.plan === "lifetime" ? "Lifetime ∞" : "1 Year"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-muted-foreground">Started</span>
+                            <span className="text-[11px] font-medium">
+                              {format(new Date(membership.starts_at), "dd MMMM yyyy")}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] text-muted-foreground">Expires</span>
+                            <span className="text-[11px] font-medium">
+                              {membership.plan === "lifetime"
+                                ? "never (◕ᴗ◕✿)"
+                                : membership.expires_at
+                                  ? format(new Date(membership.expires_at), "dd MMMM yyyy")
+                                  : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {icDetailsOpen && !membership && (
+                        <p className="mt-3 text-[11px] text-muted-foreground italic">membership details not available</p>
+                      )}
+                    </>
                   ) : icOrder?.status === "pending" ? (
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       your order is <span className="font-medium text-[hsl(45,60%,35%)]">being reviewed</span>. we'll notify you soon! (◕ᴗ◕✿)
