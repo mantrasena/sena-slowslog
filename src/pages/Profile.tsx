@@ -100,6 +100,7 @@ const Profile = () => {
   });
 
   const isOwnProfile = user && profileData && user.id === profileData.user_id;
+  const { data: membership } = useICMembership(isOwnProfile ? profileData?.user_id : undefined);
 
   if (!profileData) {
     return (
