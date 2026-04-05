@@ -10,10 +10,11 @@ import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings, Award, ArrowUpDown, Calendar } from "lucide-react";
+import { FileText, Settings, Award, ArrowUpDown, Calendar, BadgeCheck, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { useICMembership } from "@/hooks/useICMembership";
 import type { Role } from "@/lib/types";
 import type { UserStats } from "@/lib/achievements";
 
