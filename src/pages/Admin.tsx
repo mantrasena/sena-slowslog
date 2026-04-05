@@ -15,6 +15,14 @@ import { Trash2, Download, Search, Users, FileText, Settings, BadgeCheck, Shoppi
 import { format } from "date-fns";
 import { exportArticlesToPDF } from "@/lib/pdf-export";
 import type { Role } from "@/lib/types";
+import type { ICMembership } from "@/hooks/useICMembership";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ROLE_LABELS } from "@/lib/types";
 import VoucherManager from "@/components/admin/VoucherManager";
 import PopupManager from "@/components/admin/PopupManager";
