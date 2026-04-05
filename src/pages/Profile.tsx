@@ -23,6 +23,7 @@ const Profile = () => {
   const username = rawUsername?.startsWith("@") ? rawUsername.slice(1) : rawUsername;
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [icDetailsOpen, setIcDetailsOpen] = useState(false);
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", username],
