@@ -453,13 +453,26 @@ const Admin = () => {
 
   const approveOrder = async (order: ICOrder) => {
     await supabase.from("ic_orders").update({ status: "approved", updated_at: new Date().toISOString() } as any).eq("id", order.id);
+    // Grant IC with membership based on order plan
+    const plan = order.plan === "lifetime" ? "lifetime" : "yearly";
+    const now = new Date();
+    const expiresAt = plan === "yearly" ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString() : null;
     const { data: existingRole } = await supabase.from("user_roles").select("*").eq("user_id", order.user_id).eq("role", "inner_circle");
     if (!existingRole?.length) {
       await supabase.from("user_roles").insert({ user_id: order.user_id, role: "inner_circle" as any });
     }
+    await supabase.from("ic_memberships" as any).delete().eq("user_id", order.user_id);
+    await supabase.from("ic_memberships" as any).insert({
+      user_id: order.user_id,
+      plan,
+      starts_at: now.toISOString(),
+      expires_at: expiresAt,
+      granted_by: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
     toast.success(`Order approved & IC granted to @${order.username} (★‿★)`);
     fetchOrders();
     fetchUsers();
+    fetchMemberships();
   };
 
   const rejectOrder = async (order: ICOrder) => {
