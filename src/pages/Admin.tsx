@@ -215,6 +215,8 @@ const Admin = () => {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
   const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [icPlanDialog, setIcPlanDialog] = useState<{ userId: string; displayName: string } | null>(null);
+  const [memberships, setMemberships] = useState<Map<string, ICMembership>>(new Map());
 
   // Inner Circle feature toggle
   const { data: innerCircleEnabled, refetch: refetchSetting } = useQuery({
