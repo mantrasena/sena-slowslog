@@ -331,6 +331,18 @@ const Admin = () => {
     );
   };
 
+  const fetchMemberships = async () => {
+    const { data } = await supabase
+      .from("ic_memberships" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    const map = new Map<string, ICMembership>();
+    ((data as unknown as ICMembership[]) || []).forEach((m) => {
+      if (!map.has(m.user_id)) map.set(m.user_id, m);
+    });
+    setMemberships(map);
+  };
+
   const filteredUsers = useMemo(() => {
     let result = users;
     if (userSearch.trim()) {
@@ -399,15 +411,35 @@ const Admin = () => {
     fetchUsers();
   };
 
-  const toggleInnerCircle = async (userId: string, currentlyHas: boolean) => {
-    if (currentlyHas) {
-      await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "inner_circle");
-      toast.success("Inner Circle removed");
-    } else {
+  const grantInnerCircle = async (userId: string, plan: "yearly" | "lifetime") => {
+    const now = new Date();
+    const expiresAt = plan === "yearly" ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString() : null;
+    // Add role
+    const { data: existingRole } = await supabase.from("user_roles").select("*").eq("user_id", userId).eq("role", "inner_circle");
+    if (!existingRole?.length) {
       await supabase.from("user_roles").insert({ user_id: userId, role: "inner_circle" as any });
-      toast.success("Inner Circle granted (★‿★)");
     }
+    // Delete old membership, insert new
+    await supabase.from("ic_memberships" as any).delete().eq("user_id", userId);
+    await supabase.from("ic_memberships" as any).insert({
+      user_id: userId,
+      plan,
+      starts_at: now.toISOString(),
+      expires_at: expiresAt,
+      granted_by: (await supabase.auth.getUser()).data.user?.id,
+    } as any);
+    toast.success(`Inner Circle granted — ${plan === "yearly" ? "1 Year" : "Lifetime"} (★‿★)`);
+    setIcPlanDialog(null);
     fetchUsers();
+    fetchMemberships();
+  };
+
+  const removeInnerCircle = async (userId: string) => {
+    await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "inner_circle");
+    await supabase.from("ic_memberships" as any).delete().eq("user_id", userId);
+    toast.success("Inner Circle removed");
+    fetchUsers();
+    fetchMemberships();
   };
 
   const deleteStory = async () => {
