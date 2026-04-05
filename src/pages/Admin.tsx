@@ -574,7 +574,9 @@ const Admin = () => {
                     <CollapsibleMonthGroup key={group.label} label={group.label} count={group.items.length} defaultOpen={idx === 0}>
                       {({ start, end }) => (
                         <div className="divide-y divide-border">
-                          {group.items.slice(start, end).map((u) => (
+                          {group.items.slice(start, end).map((u) => {
+                            const mem = memberships.get(u.user_id);
+                            return (
                             <div key={u.user_id} className="flex items-center justify-between py-3 px-4 gap-3">
                               <div className="flex items-center gap-3 min-w-0">
                                 <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
@@ -597,21 +599,35 @@ const Admin = () => {
                                       title="Change join date"
                                     />
                                   </div>
+                                  {u.hasInnerCircle && mem && (
+                                    <p className="text-[10px] text-[hsl(45,60%,45%)] mt-0.5">
+                                      {mem.plan === "lifetime"
+                                        ? "Lifetime ∞"
+                                        : `1Y: ${format(new Date(mem.starts_at), "dd MMM yyyy")} → ${mem.expires_at ? format(new Date(mem.expires_at), "dd MMM yyyy") : "—"}`}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <button
-                                  onClick={() => toggleInnerCircle(u.user_id, u.hasInnerCircle)}
-                                  className={`flex h-7 items-center gap-1 rounded-md border px-2 text-[10px] font-medium transition-colors ${
-                                    u.hasInnerCircle
-                                      ? "border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] text-[hsl(45,60%,35%)]"
-                                      : "border-border text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)]"
-                                  }`}
-                                  title={u.hasInnerCircle ? "Remove Inner Circle" : "Grant Inner Circle"}
-                                >
-                                  <BadgeCheck className={`h-3 w-3 ${u.hasInnerCircle ? "text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" : ""}`} />
-                                  {u.hasInnerCircle ? "IC" : "IC"}
-                                </button>
+                                {u.hasInnerCircle ? (
+                                  <button
+                                    onClick={() => removeInnerCircle(u.user_id)}
+                                    className="flex h-7 items-center gap-1 rounded-md border border-[hsl(45,70%,75%)] bg-[hsl(45,80%,92%)] px-2 text-[10px] font-medium text-[hsl(45,60%,35%)] transition-colors"
+                                    title="Remove Inner Circle"
+                                  >
+                                    <BadgeCheck className="h-3 w-3 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                                    IC
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => setIcPlanDialog({ userId: u.user_id, displayName: u.display_name })}
+                                    className="flex h-7 items-center gap-1 rounded-md border border-border px-2 text-[10px] font-medium text-muted-foreground hover:border-[hsl(45,70%,75%)] hover:text-[hsl(45,60%,35%)] transition-colors"
+                                    title="Grant Inner Circle"
+                                  >
+                                    <BadgeCheck className="h-3 w-3" />
+                                    IC
+                                  </button>
+                                )}
                                 <select
                                   value={u.role}
                                   onChange={(e) => changeRole(u.user_id, e.target.value as Role)}
@@ -625,7 +641,8 @@ const Admin = () => {
                                 </select>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </CollapsibleMonthGroup>
