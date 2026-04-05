@@ -23,7 +23,7 @@ export const useICMembership = (userId: string | undefined) => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      return (data as ICMembership | null) ?? null;
+      return (data as unknown as ICMembership | null) ?? null;
     },
   });
 };
