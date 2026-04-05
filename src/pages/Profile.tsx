@@ -10,10 +10,11 @@ import AchievementList from "@/components/AchievementList";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserStories } from "@/hooks/useStories";
-import { FileText, Settings, Award, ArrowUpDown, Calendar } from "lucide-react";
+import { FileText, Settings, Award, ArrowUpDown, Calendar, BadgeCheck, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
+import { useICMembership } from "@/hooks/useICMembership";
 import type { Role } from "@/lib/types";
 import type { UserStats } from "@/lib/achievements";
 
@@ -22,6 +23,7 @@ const Profile = () => {
   const username = rawUsername?.startsWith("@") ? rawUsername.slice(1) : rawUsername;
   const { user } = useAuth();
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest");
+  const [icDetailsOpen, setIcDetailsOpen] = useState(false);
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", username],
@@ -98,6 +100,7 @@ const Profile = () => {
   });
 
   const isOwnProfile = user && profileData && user.id === profileData.user_id;
+  const { data: membership } = useICMembership(isOwnProfile ? profileData?.user_id : undefined);
 
   if (!profileData) {
     return (
@@ -150,6 +153,51 @@ const Profile = () => {
           </div>
 
           {profileData.bio && <p className="mt-5 text-sm text-muted-foreground">{profileData.bio}</p>}
+
+          {/* IC Membership Details (own profile only) */}
+          {isOwnProfile && profileData.hasInnerCircle && (
+            <div className="mt-4 rounded-md border border-border bg-muted/30 p-3">
+              <button
+                onClick={() => setIcDetailsOpen(!icDetailsOpen)}
+                className="flex items-center gap-2 w-full text-left"
+              >
+                <BadgeCheck className="h-3.5 w-3.5 text-[hsl(45,90%,50%)] fill-[hsl(45,90%,50%)] stroke-white" />
+                <span className="text-xs text-muted-foreground flex-1">
+                  Inner Circle: you're an Inner Circle member! thank you for your support (★‿★)
+                </span>
+                <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${icDetailsOpen ? "" : "-rotate-90"}`} />
+              </button>
+              {icDetailsOpen && membership && (
+                <div className="mt-3 rounded-md border border-[hsl(45,70%,80%)] bg-[hsl(45,80%,97%)] p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Plan</span>
+                    <span className="text-[11px] font-medium">
+                      {membership.plan === "lifetime" ? "Lifetime ∞" : "1 Year"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Started</span>
+                    <span className="text-[11px] font-medium">
+                      {format(new Date(membership.starts_at), "dd MMMM yyyy")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground">Expires</span>
+                    <span className="text-[11px] font-medium">
+                      {membership.plan === "lifetime"
+                        ? "never (◕ᴗ◕✿)"
+                        : membership.expires_at
+                          ? format(new Date(membership.expires_at), "dd MMMM yyyy")
+                          : "—"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {icDetailsOpen && !membership && (
+                <p className="mt-3 text-[11px] text-muted-foreground italic">membership details not available</p>
+              )}
+            </div>
+          )}
 
           <Tabs defaultValue="stories" className="mt-8">
             <TabsList className="bg-transparent border-b border-border rounded-none w-full justify-start gap-0 h-auto p-0">

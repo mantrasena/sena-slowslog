@@ -72,6 +72,36 @@ export type Database = {
           },
         ]
       }
+      ic_memberships: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          granted_by: string | null
+          id: string
+          plan: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          plan: string
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          granted_by?: string | null
+          id?: string
+          plan?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ic_orders: {
         Row: {
           admin_note: string | null
