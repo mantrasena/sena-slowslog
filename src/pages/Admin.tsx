@@ -896,6 +896,40 @@ const Admin = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* IC Plan Picker Dialog */}
+      <Dialog open={!!icPlanDialog} onOpenChange={(open) => !open && setIcPlanDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Grant Inner Circle</DialogTitle>
+            <DialogDescription>
+              Select a plan for <span className="font-medium text-foreground">{icPlanDialog?.displayName}</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              onClick={() => icPlanDialog && grantInnerCircle(icPlanDialog.userId, "yearly")}
+              className="flex items-center justify-between rounded-lg border border-border p-4 text-left hover:border-[hsl(45,70%,75%)] hover:bg-[hsl(45,80%,97%)] transition-colors"
+            >
+              <div>
+                <p className="text-sm font-medium">1 Year</p>
+                <p className="text-xs text-muted-foreground">Expires after 12 months</p>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Rp. 99.000</span>
+            </button>
+            <button
+              onClick={() => icPlanDialog && grantInnerCircle(icPlanDialog.userId, "lifetime")}
+              className="flex items-center justify-between rounded-lg border border-border p-4 text-left hover:border-[hsl(45,70%,75%)] hover:bg-[hsl(45,80%,97%)] transition-colors"
+            >
+              <div>
+                <p className="text-sm font-medium">Lifetime ∞</p>
+                <p className="text-xs text-muted-foreground">Never expires</p>
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Rp. 299.000</span>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
