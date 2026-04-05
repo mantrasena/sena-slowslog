@@ -1,57 +1,104 @@
 
 
-# Collapsible Month/Year Groups with Per-Group Pagination
+# Inner Circle Membership Details (Plan + Expiry Tracking)
 
 ## Overview
-Replace the current flat-list-with-dropdown-filter approach with collapsible month/year sections. Each month becomes a clickable header that expands to show its items (max 20 per page), with pagination inside each group if needed.
+Add membership plan tracking (1 Year / Lifetime) with start/end dates. Admin can select plan type when granting IC. Users can click to see their membership details.
 
-## Current vs New
+## Database Migration
 
-```text
-CURRENT:
-  [Dropdown: March 2026 ▼]  ← filter selects one period
-  ── March 2026 ──
-  user1, user2, ... user20
-  [< 1 2 3 >]               ← global pagination
+New table `ic_memberships`:
+```sql
+CREATE TABLE public.ic_memberships (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  plan text NOT NULL, -- 'yearly' or 'lifetime'
+  starts_at timestamptz NOT NULL DEFAULT now(),
+  expires_at timestamptz, -- NULL for lifetime
+  granted_by uuid, -- admin who granted
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 
-NEW:
-  ▶ March 2026 (24 users)   ← collapsed, click to expand
-  ▼ February 2026 (18 users) ← expanded
-     user1, user2, ... user18
-  ▶ January 2026 (45 users) ← collapsed
+ALTER TABLE public.ic_memberships ENABLE ROW LEVEL SECURITY;
+
+-- Everyone can read (needed for profile display)
+CREATE POLICY "Memberships readable by everyone" ON public.ic_memberships FOR SELECT TO public USING (true);
+
+-- Admins/founders can manage
+CREATE POLICY "Admins can manage memberships" ON public.ic_memberships FOR ALL TO authenticated USING (has_role(auth.uid(), 'admin'::app_role));
+CREATE POLICY "Founders can manage memberships" ON public.ic_memberships FOR ALL TO public USING (has_role(auth.uid(), 'founder'::app_role));
 ```
 
-## Changes (1 file: `src/pages/Admin.tsx`)
+## Changes
 
-### 1. Remove global date filter dropdowns & global pagination
-- Remove `userDateFilter`, `orderDateFilter`, `dateFilter` states
-- Remove `filterByDate` usage from `filteredUsers`, `filteredOrders`, `filteredStories`
-- Remove `getDateFilterOptions`, `filterByDate` functions (no longer needed)
-- Remove global `SimplePagination` from Users, Orders, Stories tabs
-- Remove `userPage`, `orderPage`, `storyPage` and their totalPages calculations
+### 1. Admin — Grant IC with plan selection (`src/pages/Admin.tsx`)
 
-### 2. New `CollapsibleMonthGroup` component
-- Props: `label`, `count`, `children`, `defaultOpen` (first group defaults open)
-- Clickable header row: chevron icon (▶/▼) + month label + item count badge
-- Toggling expands/collapses the content area with smooth transition
-- Uses local state for open/closed
+**Users tab IC button**: Replace the simple toggle with a dropdown/dialog that asks:
+- Plan: `1 Year` or `Lifetime`
+- On grant: insert into `ic_memberships` (plan, starts_at, expires_at = starts_at + 1 year for yearly, NULL for lifetime), then add `inner_circle` role as before
+- On remove: delete from `ic_memberships` + remove role
+- Display on user row: small label showing plan type and dates (e.g., "1Y: Apr 2026 – Apr 2027" or "Lifetime ∞")
 
-### 3. Per-group pagination
-- Each month group internally paginates its items (20 per page)
-- `CollapsibleMonthGroup` manages its own page state
-- `SimplePagination` renders inside each group when items > 20
+**IC Orders approve flow**: When approving an order, use the order's `plan` field to create the membership record with correct dates.
 
-### 4. Apply to all three tabs
-- **Users tab**: Group by `joined_at`, search still works as global filter across all groups
-- **IC Orders tab**: Group by `created_at`, status filter still works globally
-- **Stories tab**: Group by `published_at`, author filter still works globally
-- Groups are sorted newest-first (already the case with `groupByMonth`)
+### 2. Admin — Membership info visible in user list
 
-### 5. Future-proof
-- Pattern is generic — any new tab (e.g. Registration Waitlist) can reuse `CollapsibleMonthGroup` + `groupByMonth`
+Each user with IC shows a small text under their name:
+- Yearly: `1Y: 05 Apr 2026 → 05 Apr 2027`
+- Lifetime: `Lifetime ∞`
 
-## UI Detail
-- Header: `border-b`, subtle `bg-muted/30`, `cursor-pointer`, chevron rotates on open
-- Count badge: small `(24)` next to month label
-- Collapsed state saves vertical space — solves the original problem
+### 3. User side — Settings page (`src/pages/Settings.tsx`)
+
+The existing Inner Circle status box becomes clickable (when user is IC member). Clicking expands/reveals membership details:
+- Plan type (1 Year / Lifetime)
+- Start date
+- Expiry date (or "Lifetime — no expiration")
+- Styled consistently with existing muted boxes
+
+### 4. User side — Profile page (`src/pages/Profile.tsx`)
+
+On own profile, the IC badge area (below bio) shows clickable membership info similar to Settings.
+
+### 5. Hook — `useICMembership` (`src/hooks/useICMembership.ts`)
+
+Reusable hook to fetch membership details for a user:
+```ts
+const { data: membership } = useICMembership(userId);
+// returns { plan, starts_at, expires_at } or null
+```
+
+## UI Examples
+
+**Admin user row:**
+```text
+[Avatar] Display Name ✓ Writer
+         @username
+         Joined Mar 2025
+         IC: 1Y · Apr 2026 → Apr 2027    [IC ▼] [Role ▼]
+```
+
+**Settings IC box (expanded):**
+```text
+☑ Inner Circle
+  you're an Inner Circle member! (★‿★)
+  ┌─────────────────────────────┐
+  │ Plan: 1 Year                │
+  │ Started: 05 April 2026      │
+  │ Expires: 05 April 2027      │
+  └─────────────────────────────┘
+```
+
+**Lifetime variant:**
+```text
+  │ Plan: Lifetime ∞            │
+  │ Started: 05 April 2026      │
+  │ Expires: never (◕ᴗ◕✿)      │
+```
+
+## Files
+1. **Migration** — new `ic_memberships` table
+2. `src/hooks/useICMembership.ts` — new hook
+3. `src/pages/Admin.tsx` — IC grant with plan picker + display membership info
+4. `src/pages/Settings.tsx` — clickable IC status with details
+5. `src/pages/Profile.tsx` — show IC membership details on own profile
 
