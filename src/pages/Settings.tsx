@@ -117,7 +117,10 @@ const Settings = () => {
   const [savingDisplayName, setSavingDisplayName] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [icDetailsOpen, setIcDetailsOpen] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: membership } = useICMembership(user?.id);
 
   const dateOptions = useMemo(() => getDateFilterOptions(), []);
 
