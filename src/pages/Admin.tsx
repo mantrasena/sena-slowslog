@@ -46,6 +46,7 @@ interface UserRow {
   joined_at: string | null;
   role: Role;
   hasInnerCircle: boolean;
+  membership?: ICMembership | null;
 }
 
 interface StoryRow {
