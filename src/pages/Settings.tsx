@@ -850,6 +850,10 @@ const Settings = () => {
             <TabsContent value="analytics" className="mt-6">
               <AnalyticsTab />
             </TabsContent>
+            {/* Trash Tab */}
+            <TabsContent value="trash" className="mt-6">
+              <TrashTab />
+            </TabsContent>
           </Tabs>
         </section>
       </main>
