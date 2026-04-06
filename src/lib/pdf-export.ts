@@ -139,6 +139,12 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
 
   const lineH = 5.5;
   const paraGap = 5;
+  let lastColor: [number, number, number] = [45, 45, 45];
+
+  const setColor = (r: number, g: number, b: number) => {
+    lastColor = [r, g, b];
+    doc.setTextColor(r, g, b);
+  };
 
   const addFooter = () => {
     doc.setFontSize(7);
