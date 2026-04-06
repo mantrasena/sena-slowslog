@@ -444,8 +444,8 @@ const Admin = () => {
 
   const deleteStory = async () => {
     if (!deleteStoryTarget) return;
-    await supabase.from("stories").delete().eq("id", deleteStoryTarget.id);
-    toast.success("story deleted");
+    await supabase.from("stories").update({ deleted_at: new Date().toISOString() } as any).eq("id", deleteStoryTarget.id);
+    toast.success("story moved to trash");
     setDeleteStoryTarget(null);
     fetchStories();
     qc.invalidateQueries({ queryKey: ["stories"] });

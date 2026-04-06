@@ -66,7 +66,7 @@ const StoryDetail = () => {
 
   const handleDelete = async () => {
     await deleteMutation.mutateAsync(story.id);
-    toast.success("deleted (T_T)");
+    toast.success("moved to trash (T_T)");
     navigate("/");
   };
 
@@ -308,7 +308,7 @@ const StoryDetail = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete this story?</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete "{story.title}".
+                "{story.title}" will be moved to trash. You can recover it within 24 hours.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

@@ -17,21 +17,38 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Delete drafts not updated in 14 days
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 14);
+    // Delete drafts not updated in 14 days (only non-trashed ones)
+    const draftCutoff = new Date();
+    draftCutoff.setDate(draftCutoff.getDate() - 14);
 
-    const { data, error } = await supabase
+    const { data: deletedDrafts, error: draftError } = await supabase
       .from("stories")
       .delete()
       .eq("is_draft", true)
-      .lt("updated_at", cutoff.toISOString())
+      .is("deleted_at", null)
+      .lt("updated_at", draftCutoff.toISOString())
       .select("id");
 
-    if (error) throw error;
+    if (draftError) throw draftError;
+
+    // Permanently delete trashed stories older than 24 hours
+    const trashCutoff = new Date();
+    trashCutoff.setHours(trashCutoff.getHours() - 24);
+
+    const { data: deletedTrash, error: trashError } = await supabase
+      .from("stories")
+      .delete()
+      .not("deleted_at", "is", null)
+      .lt("deleted_at", trashCutoff.toISOString())
+      .select("id");
+
+    if (trashError) throw trashError;
 
     return new Response(
-      JSON.stringify({ deleted: data?.length ?? 0 }),
+      JSON.stringify({
+        deleted_drafts: deletedDrafts?.length ?? 0,
+        deleted_trash: deletedTrash?.length ?? 0,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

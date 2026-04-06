@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera, BadgeCheck, Lock, Trash2, AlertTriangle, ChevronDown } from "lucide-react";
+import { Download, FileText, PenLine, Bookmark, User as UserIcon, Clock, Filter, BarChart3, Camera, BadgeCheck, Lock, Trash2, AlertTriangle, ChevronDown, RotateCcw } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { differenceInDays, format } from "date-fns";
@@ -20,6 +20,7 @@ import StoryCard from "@/components/StoryCard";
 import type { Story } from "@/lib/types";
 import AnalyticsTab from "@/components/AnalyticsTab";
 import { useICMembership } from "@/hooks/useICMembership";
+import { useTrashStories, useRestoreStory, usePermanentDeleteStory } from "@/hooks/useStories";
 
 const CooldownDisplay = () => {
   const { data: cooldown, isLoading } = usePublishCooldown();
@@ -98,6 +99,99 @@ const filterStoriesByDate = (stories: any[], filterValue: string) => {
     });
   }
   return stories;
+};
+
+const TrashTab = () => {
+  const { data: trashItems, isLoading } = useTrashStories();
+  const restoreMutation = useRestoreStory();
+  const permanentDeleteMutation = usePermanentDeleteStory();
+
+  const getTimeLeft = (deletedAt: string) => {
+    const deleted = new Date(deletedAt);
+    const expiry = new Date(deleted.getTime() + 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const hoursLeft = Math.max(0, Math.floor((expiry.getTime() - now.getTime()) / (1000 * 60 * 60)));
+    const minsLeft = Math.max(0, Math.floor(((expiry.getTime() - now.getTime()) % (1000 * 60 * 60)) / (1000 * 60)));
+    if (hoursLeft <= 0 && minsLeft <= 0) return "expiring...";
+    return `${hoursLeft}h ${minsLeft}m left`;
+  };
+
+  return (
+    <div>
+      <h2 className="flex items-center gap-2 text-sm font-medium">
+        <Trash2 className="h-4 w-4" /> Trash
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        deleted items are automatically removed after 24 hours.
+      </p>
+
+      <div className="mt-4 divide-y divide-border rounded-md border border-border">
+        {isLoading ? (
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">loading...</p>
+        ) : !trashItems?.length ? (
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+            trash is empty ✿
+          </p>
+        ) : (
+          trashItems.map((item: any) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium">{item.title || "untitled"}</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-muted-foreground">
+                    {item.is_draft ? "draft" : "published"}
+                  </span>
+                  <span className="text-[10px] text-destructive/70 flex items-center gap-1">
+                    <Clock className="h-2.5 w-2.5" />
+                    {getTimeLeft(item.deleted_at)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={async () => {
+                    await restoreMutation.mutateAsync(item.id);
+                    toast.success("restored (◕‿◕)");
+                  }}
+                  disabled={restoreMutation.isPending}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <RotateCcw className="h-3 w-3" /> restore
+                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="flex items-center gap-1.5 text-xs text-destructive/60 hover:text-destructive">
+                      <Trash2 className="h-3 w-3" /> delete forever
+                    </button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete permanently?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        "{item.title || "untitled"}" will be permanently deleted. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          await permanentDeleteMutation.mutateAsync(item.id);
+                          toast.success("permanently deleted");
+                        }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete forever
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
 };
 
 const Settings = () => {
@@ -215,6 +309,7 @@ const Settings = () => {
         .select("*")
         .eq("user_id", user!.id)
         .eq("is_draft", true)
+        .is("deleted_at", null)
         .order("updated_at", { ascending: false });
       return data || [];
     },
@@ -424,6 +519,10 @@ const Settings = () => {
               <TabsTrigger value="analytics" disabled={!isInnerCircle && !hasElevated} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
                 {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
                 <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Analytics
+              </TabsTrigger>
+              <TabsTrigger value="trash" disabled={!isInnerCircle && !hasElevated} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Trash
               </TabsTrigger>
             </TabsList>
 
@@ -724,19 +823,20 @@ const Settings = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete draft?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  "{draft.title || "untitled"}" will be permanently deleted. This action cannot be undone.
+                                  "{draft.title || "untitled"}" will be moved to trash. You can recover it within 24 hours.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={async () => {
-                                    const { error } = await supabase.from("stories").delete().eq("id", draft.id);
+                                    const { error } = await supabase.from("stories").update({ deleted_at: new Date().toISOString() } as any).eq("id", draft.id);
                                     if (error) {
                                       toast.error("Failed to delete draft");
                                     } else {
-                                      toast.success("Draft deleted (◕‿◕)");
+                                      toast.success("Draft moved to trash (◕‿◕)");
                                       queryClient.invalidateQueries({ queryKey: ["my-drafts"] });
+                                      queryClient.invalidateQueries({ queryKey: ["trash"] });
                                     }
                                   }}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -843,6 +943,10 @@ const Settings = () => {
             {/* Analytics Tab */}
             <TabsContent value="analytics" className="mt-6">
               <AnalyticsTab />
+            </TabsContent>
+            {/* Trash Tab */}
+            <TabsContent value="trash" className="mt-6">
+              <TrashTab />
             </TabsContent>
           </Tabs>
         </section>

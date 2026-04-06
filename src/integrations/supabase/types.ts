@@ -241,6 +241,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           is_draft: boolean
           is_hidden: boolean
@@ -256,6 +257,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_draft?: boolean
           is_hidden?: boolean
@@ -271,6 +273,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           is_draft?: boolean
           is_hidden?: boolean
