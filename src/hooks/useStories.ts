@@ -68,6 +68,7 @@ export const useMyDrafts = () =>
         .select("*")
         .eq("user_id", user.id)
         .eq("is_draft", true)
+        .is("deleted_at", null)
         .order("updated_at", { ascending: false });
       return data || [];
     },
