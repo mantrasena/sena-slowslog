@@ -725,19 +725,20 @@ const Settings = () => {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete draft?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  "{draft.title || "untitled"}" will be permanently deleted. This action cannot be undone.
+                                  "{draft.title || "untitled"}" will be moved to trash. You can recover it within 24 hours.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={async () => {
-                                    const { error } = await supabase.from("stories").delete().eq("id", draft.id);
+                                    const { error } = await supabase.from("stories").update({ deleted_at: new Date().toISOString() } as any).eq("id", draft.id);
                                     if (error) {
                                       toast.error("Failed to delete draft");
                                     } else {
-                                      toast.success("Draft deleted (◕‿◕)");
+                                      toast.success("Draft moved to trash (◕‿◕)");
                                       queryClient.invalidateQueries({ queryKey: ["my-drafts"] });
+                                      queryClient.invalidateQueries({ queryKey: ["trash"] });
                                     }
                                   }}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
