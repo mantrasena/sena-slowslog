@@ -194,7 +194,7 @@ const TrashTab = () => {
   );
 };
 
-
+const Settings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, profile, loading, isFounder, isAdmin, roles } = useAuth();
