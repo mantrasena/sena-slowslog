@@ -198,11 +198,64 @@ export const useDeleteStory = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("stories").delete().eq("id", id);
+      // Soft-delete: set deleted_at instead of actually deleting
+      const { error } = await supabase
+        .from("stories")
+        .update({ deleted_at: new Date().toISOString() } as any)
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["stories"] });
+      qc.invalidateQueries({ queryKey: ["my-drafts"] });
+      qc.invalidateQueries({ queryKey: ["trash"] });
+    },
+  });
+};
+
+export const useTrashStories = () =>
+  useQuery({
+    queryKey: ["trash"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data } = await supabase
+        .from("stories")
+        .select("*")
+        .eq("user_id", user.id)
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
+      return data || [];
+    },
+  });
+
+export const useRestoreStory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("stories")
+        .update({ deleted_at: null } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["stories"] });
+      qc.invalidateQueries({ queryKey: ["my-drafts"] });
+      qc.invalidateQueries({ queryKey: ["trash"] });
+    },
+  });
+};
+
+export const usePermanentDeleteStory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("stories").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["trash"] });
     },
   });
 };
