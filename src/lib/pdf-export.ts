@@ -191,7 +191,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
     // ── Title ──
     doc.setFontSize(24);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(25, 25, 25);
+    setColor(25, 25, 25);
     const titleLines: string[] = doc.splitTextToSize(article.title || "Untitled", mw);
     for (const line of titleLines) {
       y = ensureSpace(y, 10);
@@ -204,7 +204,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
     if (article.subtitle) {
       doc.setFontSize(14);
       doc.setFont("helvetica", "italic");
-      doc.setTextColor(90, 90, 90);
+      setColor(90, 90, 90);
       const subLines: string[] = doc.splitTextToSize(article.subtitle, mw);
       for (const line of subLines) {
         y = ensureSpace(y, 7);
@@ -229,7 +229,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
     if (metaParts.length) {
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(140, 140, 140);
+      setColor(140, 140, 140);
       doc.text(metaParts.join("  ·  "), mg, y);
       y += 8;
     }
@@ -255,7 +255,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
         const sz = block.level && block.level <= 2 ? 16 : block.level === 3 ? 13 : 11.5;
         doc.setFontSize(sz);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(30, 30, 30);
+        setColor(30, 30, 30);
         const lines: string[] = doc.splitTextToSize(block.text, mw);
         for (const line of lines) {
           y = ensureSpace(y, 8);
@@ -269,7 +269,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
       if (block.type === "blockquote") {
         doc.setFontSize(10.5);
         doc.setFont("helvetica", "italic");
-        doc.setTextColor(100, 100, 100);
+        setColor(100, 100, 100);
         const qIndent = 6;
         const lines: string[] = doc.splitTextToSize(block.text, mw - qIndent);
         // Draw left bar
@@ -289,7 +289,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
       if (block.type === "list-item") {
         doc.setFontSize(10.5);
         doc.setFont("helvetica", "normal");
-        doc.setTextColor(45, 45, 45);
+        setColor(45, 45, 45);
         const bullet = "•  ";
         const indent = doc.getTextWidth(bullet);
         const lines: string[] = doc.splitTextToSize(block.text, mw - indent);
@@ -307,7 +307,7 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
       // ── Regular paragraph ──
       doc.setFontSize(10.5);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(45, 45, 45);
+      setColor(45, 45, 45);
       const lines: string[] = doc.splitTextToSize(block.text, mw);
       for (const line of lines) {
         y = ensureSpace(y, lineH);
