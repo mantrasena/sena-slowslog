@@ -426,6 +426,10 @@ const Settings = () => {
                 {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
                 <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Analytics
               </TabsTrigger>
+              <TabsTrigger value="trash" disabled={!isInnerCircle && !hasElevated} className="rounded-none border-b-2 border-transparent px-4 py-2 text-xs data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none disabled:opacity-40">
+                {!isInnerCircle && !hasElevated && <Lock className="h-3 w-3 mr-1" />}
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Trash
+              </TabsTrigger>
             </TabsList>
 
             {/* Profile Tab */}
