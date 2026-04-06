@@ -147,10 +147,24 @@ export const exportArticlesToPDF = (articles: ArticleForPDF[]) => {
     doc.text(`${pageNum}`, pw / 2, ph - 10, { align: "center" });
   };
 
+  // Save & restore font state across page breaks so content styling is preserved
   const nextPage = (): number => {
+    const savedSize = doc.getFontSize();
+    const savedFont = doc.getFont();
+    const savedColor = (doc as any).__lastTextColor;
+
     addFooter();
     doc.addPage();
     pageNum++;
+
+    // Restore previous text styling
+    doc.setFontSize(savedSize);
+    doc.setFont(savedFont.fontName, savedFont.fontStyle);
+    if (savedColor) {
+      doc.setTextColor(savedColor[0], savedColor[1], savedColor[2]);
+    } else {
+      doc.setTextColor(45, 45, 45);
+    }
     return mg;
   };
 
